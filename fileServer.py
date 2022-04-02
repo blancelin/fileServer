@@ -4,8 +4,8 @@ import time
 import socket
 from threading import Timer
 from urllib import request as rq
-from algorithm import mine_decrypt
-from logServer import blance_logging
+from utils.algorithm import mine_decrypt
+from utils.logServer import blance_logging
 from flask import Flask, render_template, \
     request, jsonify, send_from_directory
 from werkzeug.routing import BaseConverter
@@ -165,5 +165,8 @@ def clean_file_handle():
 # 前端跑马灯提示
 
 if __name__ == '__main__':
+    """
+        本地 || 服务器 运行只用切换公网和局域网IP
+    """
     clean_file_handle()
     app.run(host="127.0.0.1", port=PORT, debug=False, use_reloader=False)

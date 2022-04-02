@@ -36,6 +36,8 @@ PORT = int(mine_decrypt("D7CDBDE0F480237F0240944C6E827763AADFB4EF8980227D9CD2727
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # 文件存储路径
 SAVE_PATH = os.path.join(BASE_DIR, "files")
+# 不存在则新建
+os.mkdir(SAVE_PATH) if not os.path.exists(SAVE_PATH) else SAVE_PATH 
 # 实例化日志对象
 log = blance_logging()
 

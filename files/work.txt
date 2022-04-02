@@ -1,0 +1,84 @@
+查看艺赛旗社区下的RPA实施的帖子。
+fzgs333888
+
+研发效率：
+1、交付周期保障：优化类需求，从提出到上线，90%在2周内;
+2、按时上线保障：延期率<=4%;
+3、RPA通道开发任务。单个公司开发时间3-6天;
+研发质量：
+1、线上bug率：<团队平均值;
+2、线上故障：p1<=1,p2<=3;
+3、千行bug率低于团队平均值;
+4、脚本稳定性单个任务成功率：98%;
+文档标准：
+1、文档标准化，覆盖率>=90;
+2、系统健康度，测评>=良好;
+技术创新:
+1、新技术引入、组件封装、技术分享、RPA组件标准化、工程标准化创新良好
+2、得分<=3分;
+
+总结：
+入职3个多月以来，新通道的开发包括，嘉航货代录单、外代舱单与VGM、亿通ONE订舱与提单、达飞物流订舱
+在这些新通道的开发过程中，总结出了一套RPA通道开发标步骤与通道对照表，并已分享给组内其他成员;通道的
+维护包括：cosco舱单的python（EXE）程序的改造，支持履约平台与单证云同时使用、csoco非电商订舱与亿通
+ONE订舱的特殊装载要求改造、参与了已提交，但未收到回执的7个历史通道的改造、SITC订舱和提单VPN连接异常，
+无法正常退出的优化等;如cosco舱单的改造，由于需要支持单证云平台，原有的技术方案实施较为麻烦，后期维护
+不止RPA流程还包括java生成模板文件的接口，此时通过在RPA内部调用EXE程序，自动生成模板文件，在后续切换
+单证云平台只需在校验和适配脚本简单处理即可。改造已提交，未取得回执的流程，通过分析原有的通道提交逻辑，
+确定哪些通道需要添加兜底查询逻辑，哪些通道需要抛出网络异常重试等，针对性进行流程的改造，能够大量减少
+因最后的提交而产生的错误;然后自己也编写了RPA通道开发标准文档，参与了Code落库标准化的推进以及浏览器/网页
+提示弹窗捕获组件的开发等;个人总体表现谈不上优秀，算得上良好吧，给自己评个B+。后续还有更多通道建设、维护、
+link平台的优化等，仍然需要不断的努力，不断提升工作质量和效率，共勉之。
+
+优化RPA流程内部业务逻辑，保证任务提交之后即成功，如若失败，做好错误归类，做到因RPA内部原因导致错误的总体成功率达99%以上，二月份以来
+
+
+
+云扩调研：
+1. 云扩底层使用C#开发，RPA编辑器默认使用C#语法，且不支持切换VB;
+2. 云扩RPA编辑器界面与常用组件与uipath相似度极高，从uipath切换云扩较为容易;
+3. 云扩调用子流程时，画布直接双击控件无法跳转子流程，这个会影响开发和调试效率;
+4. 云扩在单个流程引入C#模块时，无法全局生效，其他子流程使用，需要再次引入;
+5. 云扩控件用法有良好的帮助文档及使用说明，并且在线支持也较为方便;
+6. 云扩选择器支持对浏览器xpath语法，极大方便了后续元素定位问题;
+7. 云扩提供了大量的组件和示例流程，目前没有发现可以直接拿来使用;
+8. 云扩社区版功能目前对浏览器支持够用，应用端端程序未知;
+
+https://airportal.cn/
+# 前端事件
+https://www.runoob.com/jsref/dom-obj-event.html
+#fafafa
+
+
+var(--cr-card-shadow)
+
+
+订舱：
+22:booking_emc_rpa, 46:booking_cosco_rpa, 87:booking_hpl_rpa, 86:booking_oocl_rpa, 57:booking_yml_rpa, 109:booking_yitong_rpa, 119:booking_whl_rpa, 115:booking_dafei_rpa, 19:booking_kmtc_rpa, 18:booking_sitc_rpa
+提单：
+54:bill_emc_rpa, 40:bill_cosco_rpa, 90:bill_oocl_rpa, 31:bill_sitc_rpa, 38:bill_kmtc_rpa, 36:bill_sinko_rpa, 59:bill_yml_rpa, 120:bill_yitong_one_rpa
+舱单:
+108:manifest_cosco_wf_rpa, 104:manifest_tjwd_rpa, 48:manifest_qingport_rpa, 
+VGM:
+6:vgm_emc_rpa, 39:vgm_kmtc_rpa, 53:vgm_one_rpa, 105:vgm_tjwd_rpa
+
+
+sZuV9H
+
+def polling():
+    res = requests.post(url=url, headers=headers, verify=False, json=post_data).json()
+    print(f"\033[0;33m{res}\033[0m")
+    print(f"\033[0;32m{time.strftime('%Y-%m-%d %X')}：等待下一次调度......\033[0m")
+    t = threading.Timer(interval=10800, function=polling)
+    t.start()
+
+2362786qQ.
+polling()
+
+分析windows自带常开进程；
+5C6370
+
+// 接收源数据, tojson防止被转义
+// var fileList = JSON.parse({{ file_list| tojson }});
+// var fileListString = "{{ file_list }}";
+http://47.97.203.223:4288/

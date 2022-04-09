@@ -42,6 +42,10 @@
     scrollbar-width: thin
 }
 
+sapn {
+    color: inherit;
+}
+
 a {
     color: inherit;
     text-decoration: none

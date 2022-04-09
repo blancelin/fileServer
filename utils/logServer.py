@@ -4,7 +4,7 @@ import logging
 import colorlog
 
 # 日志文件路径
-log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output.log")
+log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "output.log")
 # 设置控制台打印的颜色
 colors_config = {
     'DEBUG': 'cyan',

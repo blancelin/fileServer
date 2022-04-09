@@ -5,8 +5,10 @@
 <head>
     <meta charset="UTF-8">
     <!-- 手机界面自适应 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes" />
     <title>fileServer Blance</title>
+    <script src="../static/js/jquery.min.js"></script>
     <link rel="stylesheet" href="../static/css/fileServer.css">
     <link rel="shortcut icon" href="../static/icon.jpg">
     <script type="text/javascript">
@@ -14,14 +16,59 @@
         const uploadFunc = () => {
             document.querySelector("#file").click();
         }
-        // 文件上传处理
+        // 拖拽文件上传
+        $(function () {
+            // 阻止浏览器默认行为
+            $(document).on({
+                // 拖离
+                dragleave: function (e) {
+                    e.preventDefault();
+                },
+                // 拖放后
+                drop: function (e) {
+                    e.preventDefault();
+                },
+                // 拖进
+                dragenter: function (e) {
+                    e.preventDefault();
+                },
+                // 拖来拖去
+                dragover: function (e) {
+                    e.preventDefault();
+                }
+            });
+            // 拖拽区域
+            var box = document.getElementsByTagName("body")[0];
+            box.addEventListener("drop", function (e) {
+                // 取消默认浏览器拖拽效果
+                e.preventDefault();
+                // 获取文件对象
+                var fileList = e.dataTransfer.files;
+                var file = fileList[0];
+                // 文件上传处理
+                fileHandle(file);
+                // 设置焦点
+                $("#agree-btn").focus();
+                // 清除拖拽文件
+                e.dataTransfer.clearData();
+            }, false)
+        })
+        // 选择文件上传
         const uploadFile = async () => {
             // 获取文件列表对象
             var file = document.querySelector("#file").files[0];
+            // 文件上传处理
+            fileHandle(file);
+            // 清空文件选择
+            var elem = document.querySelector("#file");
+            elem.outerHTML = elem.outerHTML;
+        }
+        // 文件上传处理
+        const fileHandle = (file) => {
             var fileName = file.name;
             var fileSzie = file.size;
-            if (fileSzie > 1024 * 1024 * 10) {
-                window.alert("文件大小不能超过10M!")
+            if (fileSzie > 1024 * 1024 * 20) {
+                window.alert("文件大小不能超过20M!")
             } else {
                 // 释放加载动画
                 document.querySelector(".Loading").setAttribute("style", "display: block;");
@@ -57,9 +104,6 @@
                 xhr.open('POST', '/fileUpload', true);
                 xhr.send(formData);
             }
-            // 清空文件选择
-            var elem = document.querySelector("#file");
-            elem.outerHTML = elem.outerHTML;
         }
         // fileUrl复制
         const linkCopy = () => {
@@ -72,7 +116,7 @@
             input.setSelectionRange(0, text.length);
             document.execCommand('copy');
             // 添加disabled属性
-            document.querySelector("#fileUrl").setAttribute("disabled","")
+            document.querySelector("#fileUrl").setAttribute("disabled", "")
             // 提示框消失
             document.querySelector(".popup").removeAttribute("style");
         }
@@ -96,17 +140,16 @@
         <button id="download" class="main-btn" onclick="downloadFunc()">下载</button>
     </div>
     <div class="popup">
-            <p class="popup-title">文件已成功上传</p>
-            <p>您的下载链接</p>
-            <input id="fileUrl" type="text" value="" disabled>
-            <div class="btn-bar">
-                <button id="agree-btn" class="popup-main-btn" onclick="linkCopy()">复制</button>
-            </div>
+        <p class="popup-title">文件已成功上传</p>
+        <p>您的下载链接</p>
+        <input id="fileUrl" type="text" value="" disabled>
+        <div class="btn-bar">
+            <button id="agree-btn" class="popup-main-btn" onclick="linkCopy()">复制</button>
         </div>
     </div>
-    <footer id="footer-left" aria-hidden="true"><a href="https://beian.miit.gov.cn/" target="_blank"
-            rel="noopener">鄂ICP备20226568号-1</a> | <a class="link" id="tos" href="https://www.retiehe.com/tos"
-            target="_blank" rel="noopener">服务条款</a></footer>
+    </div>
+    <footer id="footer-left" aria-hidden="true"><span>本项目已经开源</span> | <a class="link" id="tos" href="https://www.baidu.com"
+            target="_blank" rel="noopener">友情链接</a></footer>
     <script>
         // 公共方法
         // 显示对象属性和方法

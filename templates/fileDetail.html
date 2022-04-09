@@ -45,32 +45,38 @@
         function wordMove() {
             // 获取移动节点
             var resource = document.getElementById("rightContet");
-            // 获取当前文字所在x轴位置
-            var x = parseInt(window.getComputedStyle(resource, null).right);
-            // 最左目标
-            var lx = parseInt(width * 0.095);
-            // 最右目标起始位置
-            var rx = parseInt(width * 0.0035);
-            if (x < lx && tag == 0)  {
-                // 向左移动
-                x++;
-                if (x == lx) {
-                    // 达到最左目标后,更改标识
-                    tag = 1;
+            // 获取文字的宽度
+            var textWidth = resource.clientWidth;
+            // 文字长度小于0.24width移动
+            if (textWidth < 0.24 * width) {
+                // 获取当前文字所在x轴位置
+                var x = parseInt(window.getComputedStyle(resource, null).right);
+                // 最左目标
+                // var lx = parseInt(width * 0.095);
+                var lx = parseInt(0.24 * width - textWidth);
+                // 最右目标起始位置
+                var rx = parseInt(width * 0.0035);
+                if (x < lx && tag == 0)  {
+                    // 向左移动
+                    x++;
+                    if (x == lx) {
+                        // 达到最左目标后,更改标识
+                        tag = 1;
+                    }
                 }
-            }
-            if (x > rx && tag == 1) {
-                // 向右移动
-                x--;
-                if (x == rx) {
-                    // 达到最右目标后,更改标识
-                    tag = 0;
+                if (x > rx && tag == 1) {
+                    // 向右移动
+                    x--;
+                    if (x == rx) {
+                        // 达到最右目标后,更改标识
+                        tag = 0;
+                    }
                 }
+                // 设置x轴坐标
+                resource.style.right = x + "px";
+                // 执行更新
+                t = setTimeout("wordMove()", 10);
             }
-            // 设置x轴坐标
-            resource.style.right = x + "px";
-            // 执行更新
-            t = setTimeout("wordMove()", 10);
         }
         window.onload = wordMove;
     </script>

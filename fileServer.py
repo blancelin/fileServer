@@ -26,10 +26,16 @@ app = Flask(__name__)
 app.url_map.converters["re"] = RegexConverter
 # 支持中文
 app.config['JSON_AS_ASCII'] = False
-# 公网ip
-HOST = json.loads(rq.urlopen("https://api.ipify.org/?format=json").read())["ip"]
-# 局域网ip
-# HOST = socket.gethostbyname(socket.gethostname())
+# 当前环境
+VENV = "local"  # TODO 环境切换时：local or prod
+if VENV == "local":
+    # 局域网ip
+    HOST = socket.gethostbyname(socket.gethostname())
+    host = HOST
+else:
+    # 公网ip
+    HOST = json.loads(rq.urlopen("https://api.ipify.org/?format=json").read())["ip"]
+    host = "127.0.0.1"
 # 端口
 PORT = int(mine_decrypt("D7CDBDE0F480237F0240944C6E827763AADFB4EF8980227D9CD2727685E1DAB5"))
 # 服务根路径
@@ -51,8 +57,10 @@ def upload(url):
         f = request.files["file"]
         upload_path = os.path.join(SAVE_PATH, f.filename)
         f.save(upload_path)
-        file_url = f"http://{HOST}:{PORT}/download/{f.filename}"
-        # file_url = f"http://{HOST}/download/{f.filename}"
+        if VENV == "local":
+            file_url = f"http://{HOST}:{PORT}/download/{f.filename}"
+        else:
+            file_url = f"http://{HOST}/download/{f.filename}"
         # 埋入日志
         log.info(f"upload file_url {file_url} by {ip}")
         return jsonify({"status": True, "message": file_url})
@@ -90,10 +98,12 @@ def detail(url):
             file_name = os.path.basename(file)
             file_size = os.path.getsize(file)
             file_date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(file_date))
-            file_link = f"http://{HOST}:{PORT}/download/{file_name}"
-            # file_link = f"http://{HOST}/download/{file_name}"
+            if VENV == "local":
+                file_url = f"http://{HOST}:{PORT}/download/{file_name}"
+            else:
+                file_url = f"http://{HOST}/download/{file_name}"
             file_list.append(
-                {"fileSize": file_size, "fileDate": file_date, "fileName": file_name, "fileUrl": file_link})
+                {"fileSize": file_size, "fileDate": file_date, "fileName": file_name, "fileUrl": file_url})
         # 按日期倒序
         file_list = sorted(file_list, key=lambda item: item["fileDate"], reverse=True)
         # 转json格式，支持中文
@@ -167,8 +177,5 @@ def clean_file_handle():
 # 前端跑马灯提示
 
 if __name__ == '__main__':
-    """
-        本地 || 服务器 运行只用切换公网和局域网IP
-    """
     clean_file_handle()
-    app.run(host="127.0.0.1", port=PORT, debug=False, use_reloader=False)
+    app.run(host=host, port=PORT, debug=False, use_reloader=False)

@@ -37,7 +37,7 @@ body {
     border-radius: 2px;
     align-items: center;
 	height: 36px;
-    width: 680px;
+    width: 50%;
 }
 
 #rightContet {
@@ -108,8 +108,8 @@ label {
 #content {
 	margin: 6px auto;
 	margin-top: 25px;
-	width: 680px;
-	height: 130px;
+	width: 50%;
+	height: 17%;
 	background-color: white;
 	box-shadow: 0 5px 20px rgb(65 145 245 / 30%);
 	display: flex;
@@ -183,8 +183,8 @@ label {
 	left: 0;
 	right: 0;
 	margin: 0 auto;
-	height: 80px;
-	width: 580px;
+	height: 10.42%;
+	width: 42.46%;
 	color: rgb(26, 115, 232);
 }
 

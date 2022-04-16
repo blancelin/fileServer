@@ -179,17 +179,12 @@ label {
 /* 底部中间显示 */
 .zzsc {
 	display: flex;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	margin: 0 auto;
-	height: 10.42%;
-	width: 42.46%;
 	color: rgb(26, 115, 232);
 }
 
 .page {
 	list-style: none;
+	margin: 0 auto;
 }
 
 .page>li {

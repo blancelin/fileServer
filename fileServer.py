@@ -2,6 +2,7 @@ import os
 import json
 import time
 import socket
+import requests
 from threading import Timer
 from urllib import request as rq
 from utils.algorithm import mine_decrypt
@@ -43,9 +44,53 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # 文件存储路径
 SAVE_PATH = os.path.join(BASE_DIR, "files")
 # 不存在则新建
-os.mkdir(SAVE_PATH) if not os.path.exists(SAVE_PATH) else SAVE_PATH 
+os.mkdir(SAVE_PATH) if not os.path.exists(SAVE_PATH) else SAVE_PATH
 # 实例化日志对象
 log = blance_logging()
+# todo 接入马上登录
+secretKey = mine_decrypt("3C7CF66DA16610A1E09B3C12CAF6FD4A35D2B7B4873B00FAAE42A6D459EAE501"
+                         "A9D250471C10A074D2314B28A71E0FC2A9D250471C10A074D2314B28A71E0FC2")
+
+
+# 3. 回调URL：http://47.97.203.223/mashang/login/callback
+
+
+# 二维码
+@app.route("/mashang/login/qrCodeReturnUrl", methods=["GET"])
+def qrcode():
+    url = f"https://server01.vicy.cn/8lXdSX7FSMykbl9nFDWESdc6zfouSAEz/wxlogin/wxLogin/tempUserId?secretKey={secretKey}"
+    # 默认值
+    qrcode_url = "http://login.vicy.cn?tempUserId=5e371810a63b4c54919d108d11ccfda4"
+    resp = requests.get(url)
+    code = resp.status_code
+    msg = resp.json()["message"] if code == 200 else "失败"
+    if msg == "成功":
+        qrcode_url = resp.json()["data"]["qrCodeReturnUrl"]
+    return jsonify({"qrcode_url": qrcode_url})
+
+
+# 回调接口
+@app.route("/mashang/login/callback", methods=["POST"])
+def callback():
+    user_id = request.form.get("userId")
+    temp_user_id = request.form.get("tempUserId")
+    nick_name = request.form.get("nickname", "Guest")
+    avatar = request.form.get("avatar", "")
+    ip_addr = request.form.get("ipAddr")
+    # 回写request属性
+    setattr(request, "user_id", user_id)
+    # request.user_id = user_id
+    # request.nick_name = nick_name
+    # request.avatar = avatar
+    return jsonify({"status": True, "message": "success"})
+
+
+# 登录结果获取
+@app.route("/mashang/login/userInfo", methods=["GET"])
+def userinfo():
+    user_id = getattr(request, "user_id")
+    print(user_id)
+    return jsonify({"status": True, "message": "success"})
 
 
 # 文件上传，返回：{"status": True, "fileUrl": ""}

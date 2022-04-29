@@ -7,9 +7,9 @@ from threading import Timer
 from urllib import request as rq
 from utils.algorithm import mine_decrypt
 from utils.logServer import blance_logging
-from flask import Flask, render_template, \
-    request, jsonify, send_from_directory
 from werkzeug.routing import BaseConverter
+from flask import Flask, render_template, \
+    request, jsonify, send_from_directory, session, make_response
 
 
 class RegexConverter(BaseConverter):
@@ -27,6 +27,8 @@ app = Flask(__name__)
 app.url_map.converters["re"] = RegexConverter
 # 支持中文
 app.config['JSON_AS_ASCII'] = False
+# SECRET_KEY
+app.config['SECRET_KEY'] = "blance"
 # 当前环境
 VENV = "local"  # TODO 环境切换时：local or prod
 if VENV == "local":
@@ -77,19 +79,39 @@ def callback():
     nick_name = request.form.get("nickname", "Guest")
     avatar = request.form.get("avatar", "")
     ip_addr = request.form.get("ipAddr")
-    # 回写request属性
-    setattr(request, "user_id", user_id)
-    # request.user_id = user_id
-    # request.nick_name = nick_name
-    # request.avatar = avatar
+    # 回写session
+    session["userId"] = user_id
+    session["nickname"] = nick_name
+    session["tempUserId"] = temp_user_id
+    session["avatar"] = avatar
     return jsonify({"status": True, "message": "success"})
 
 
-# 登录结果获取
-@app.route("/mashang/login/userInfo", methods=["GET"])
-def userinfo():
-    user_id = getattr(request, "user_id")
-    print(user_id)
+# 登录结果响应
+@app.route("/mashang/login/userInfo/<path:temp_user_id>", methods=["GET"])
+def userinfo(temp_user_id):
+    if temp_user_id != session.get("tempUserId"):
+        return jsonify({"status": False, "message": "the guest not login"})
+    user_id = session.get("userId")
+    nick_name = session.get("nickname")
+    avatar = session.get("avatar")
+    resp = make_response(jsonify({"status": True, "message": "%s welcome login" % nick_name}))
+    resp.set_cookie("userId", user_id)
+    resp.set_cookie("nickname", nick_name)
+    resp.set_cookie("avatar", avatar)
+    return resp
+
+
+# 获取请求cookie中的信息
+@app.route("/get_cookie")
+def get_cookie():
+    """
+        获取cookie，通过request.cookies的方式，
+        返回的是一个字典，可以用get的方式
+    """
+    # nickname = request.cookies.get("session")
+    nick_name = request.cookies.get("nickname")  # 获取名字为nickname对应cookie的值
+    print(nick_name)
     return jsonify({"status": True, "message": "success"})
 
 

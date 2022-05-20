@@ -74,17 +74,19 @@ def qrcode():
 # 回调接口
 @app.route("/mashang/login/callback", methods=["POST"])
 def callback():
-    user_id = request.form.get("userId")
-    temp_user_id = request.form.get("tempUserId")
-    nick_name = request.form.get("nickname", "Guest")
-    avatar = request.form.get("avatar", "")
-    ip_addr = request.form.get("ipAddr")
+    json_dict = request.get_json()
+    # user_id = request.form.get("userId")
+    user_id = json_dict["userId"]
+    temp_user_id = json_dict["tempUserId"]
+    nick_name = json_dict.get("nickname", "Guest")
+    avatar = json_dict.get("avatar", "")
+    ip_addr = json_dict["ipAddr"]
     # 回写session
     session["userId"] = user_id
     session["nickname"] = nick_name
     session["tempUserId"] = temp_user_id
     session["avatar"] = avatar
-    return jsonify({"status": True, "message": "success"})
+    return jsonify({"status": True, "errcode": 0})
 
 
 # 登录结果响应

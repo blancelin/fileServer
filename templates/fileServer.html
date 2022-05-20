@@ -1,7 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0021)https://airportal.cn/ -->
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <!-- 手机界面自适应 -->
@@ -9,166 +7,53 @@
         content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes" />
     <title>fileServer Blance</title>
     <script src="../static/js/jquery.min.js"></script>
-    <link rel="stylesheet" href="../static/css/fileServer.css">
+    <script src="../static/js/jquery.qrcode.min.js"></script>
+    <script src="../static/js/server.js"></script>
+    <link rel="stylesheet" href="../static/css/server.css">
     <link rel="shortcut icon" href="../static/icon.jpg">
-    <script type="text/javascript">
-        // 激活选择文件
-        const uploadFunc = () => {
-            document.querySelector("#file").click();
-        }
-        // 拖拽文件上传
-        $(function () {
-            // 阻止浏览器默认行为
-            $(document).on({
-                // 拖离
-                dragleave: function (e) {
-                    e.preventDefault();
-                },
-                // 拖放后
-                drop: function (e) {
-                    e.preventDefault();
-                },
-                // 拖进
-                dragenter: function (e) {
-                    e.preventDefault();
-                },
-                // 拖来拖去
-                dragover: function (e) {
-                    e.preventDefault();
-                }
-            });
-            // 拖拽区域
-            var box = document.getElementsByTagName("body")[0];
-            box.addEventListener("drop", function (e) {
-                // 取消默认浏览器拖拽效果
-                e.preventDefault();
-                // 获取文件对象
-                var fileList = e.dataTransfer.files;
-                var file = fileList[0];
-                // 文件上传处理
-                fileHandle(file);
-                // 设置焦点
-                $("#agree-btn").focus();
-                // 清除拖拽文件
-                e.dataTransfer.clearData();
-            }, false)
-        })
-        // 选择文件上传
-        const uploadFile = async () => {
-            // 获取文件列表对象
-            var file = document.querySelector("#file").files[0];
-            // 文件上传处理
-            fileHandle(file);
-            // 清空文件选择
-            var elem = document.querySelector("#file");
-            elem.outerHTML = elem.outerHTML;
-        }
-        // 文件上传处理
-        const fileHandle = (file) => {
-            var fileName = file.name;
-            var fileSzie = file.size;
-            if (fileSzie > 1024 * 1024 * 20) {
-                window.alert("文件大小不能超过20M!")
-            } else {
-                // 释放加载动画
-                document.querySelector(".Loading").setAttribute("style", "display: block;");
-                // 等待3s
-                // await sleep(3000);
-                // 实例化一个表单数据对象
-                var formData = new FormData();
-                formData.append("file", file);
-                // ajax请求
-                var xhr = new XMLHttpRequest();
-                // 回调处理
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState == 4) {
-                        if (xhr.status == 200) {
-                            var res = xhr.responseText;
-                            var status = JSON.parse(res).status;
-                            var fileUrl = JSON.parse(res).message;
-                            // 传送成功
-                            if (status) {
-                                // 显示提示框
-                                document.querySelector(".popup").setAttribute("style", "opacity: 1; transform: scale(1);");
-                                // 设置文件链接
-                                document.querySelector("#fileUrl").value = fileUrl;
-                            } else {
-                                window.alert(`${fileName}：上传失败，上传服务当前不可用！`)
-                            }
-                        }
-                        // 加载完成
-                        document.querySelector(".Loading").setAttribute("style", "display: none;");
-                    }
-                }
-                // post请求发送表达数据
-                xhr.open('POST', '/fileUpload', true);
-                xhr.send(formData);
-            }
-        }
-        // fileUrl复制
-        const linkCopy = () => {
-            // 移除disabled属性
-            document.querySelector("#fileUrl").removeAttribute("disabled")
-            // 复制到剪切板
-            var input = document.getElementById("fileUrl")
-            var text = input.value
-            input.select();
-            input.setSelectionRange(0, text.length);
-            document.execCommand('copy');
-            // 添加disabled属性
-            document.querySelector("#fileUrl").setAttribute("disabled", "")
-            // 提示框消失
-            document.querySelector(".popup").removeAttribute("style");
-        }
-        // detail详情页
-        const downloadFunc = () => {
-            // window.alert("下载详情页暂未开放")
-            window.open("/fileDetail", "_self")
-        }
-    </script>
 </head>
-
 <body class="">
     <section class="Loading" style="display: none;"></section>
     <picture class="logo-box">
         <img src="../static/icon.gif" alt="" draggable="false">
     </picture>
+    <div id="user" class="user userInfo" style="display: none;">
+        <div class="avatar">
+          <img id="avatar" src="../static/icon.jpg" alt="">
+        </div>
+        <div class="userName" id="nickName">nickName</div>
+    </div>
     <div id="main-box" class="main-box">
         <!-- 鼠标点击则出现上传文件提示 -->
         <input type="file" id="file" name="file" onchange="uploadFile()">
         <button id="upload" onclick="uploadFunc()" class="main-btn" type="button">上传</button>
-        <button id="download" class="main-btn" onclick="downloadFunc()">下载</button>
+        <button id="download" class="main-btn" onclick="isLoginHandle()">下载</button>
     </div>
-    <div class="popup">
-        <p class="popup-title">文件已成功上传</p>
-        <p>您的下载链接</p>
-        <input id="fileUrl" type="text" value="" disabled>
-        <div class="btn-bar">
-            <button id="agree-btn" class="popup-main-btn" onclick="linkCopy()">复制</button>
+    <div id="popup" style="display: none;">
+        <div class="poupMask"></div>
+        <div class="popupContent">
+            <p class="popup-title">文件已成功上传</p>
+            <p>您的下载链接</p>
+            <input id="fileUrl" type="text" value="" disabled>
+            <div class="btn-bar">
+                <button id="agree-btn" class="popup-main-btn" onclick="linkCopy()">复制</button>
+            </div>
         </div>
     </div>
-    </div>
+    <div class="loginWrap" id="loginWrap" style="display: none;">
+        <div id="loginMask" class="loginMask"></div>
+        <div class="loginCol">
+            <div class="title">
+              <span>扫码登录</span>
+              <div id="loginClose" class="loginClose"><img class="icon" src="../static/close.png"></div>
+            </div>
+            <div class="loginMain">
+              <div class="loginQR" id="loginQR"><canvas width="150" height="150"></canvas></div>
+              <div class="tips">请使用微信扫码登录</div>
+            </div>
+        </div>
+    </div>   
     <footer id="footer-left" aria-hidden="true"><span>本项目已经开源</span> | <a class="link" id="tos" href="https://www.baidu.com"
             target="_blank" rel="noopener">友情链接</a></footer>
-    <script>
-        // 公共方法
-        // 显示对象属性和方法
-        function dir(Obj) {
-            var attributes = '';
-            var methods = '';
-            for (const attr in Obj) {
-                if (Obj.attr != null)
-                    attributes = attributes + attr + ' 属性： ' + Obj.i + '\r\n';
-                else
-                    methods = methods + '方法: ' + attr + '\r\n';
-            }
-            return attributes, methods
-        }
-        // sleep函数 await sleep(ms)进行调用;
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-    </script>
 </body>
-
 </html>

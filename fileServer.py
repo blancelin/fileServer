@@ -44,9 +44,9 @@ PORT = int(mine_decrypt("D7CDBDE0F480237F0240944C6E827763AADFB4EF8980227D9CD2727
 # 服务根路径
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # 文件存储路径
-SAVE_PATH = os.path.join(BASE_DIR, "files")
+BASIC_PATH = os.path.join(BASE_DIR, "files")
 # 不存在则新建
-os.mkdir(SAVE_PATH) if not os.path.exists(SAVE_PATH) else SAVE_PATH
+os.mkdir(BASIC_PATH) if not os.path.exists(BASIC_PATH) else BASIC_PATH
 # 实例化日志对象
 log = blance_logging()
 # todo 接入马上登录
@@ -90,6 +90,7 @@ def callback():
 # 登录结果响应
 @app.route("/mashang/login/userInfo/<path:temp_user_id>", methods=["GET"])
 def userinfo(temp_user_id):
+    # 服务器
     if temp_user_id != session.get("tempUserId"):
         return jsonify({"status": False, "message": "the guest not login"})
     user_id = session.get("userId")
@@ -99,6 +100,12 @@ def userinfo(temp_user_id):
     resp.set_cookie("userId", user_id)
     resp.set_cookie("nickname", nick_name)
     resp.set_cookie("avatar", avatar)
+    # 本地测试
+    # resp = make_response(jsonify({"status": True, "message": "%s welcome login" % "blance"}))
+    # resp.set_cookie("userId", "236278")
+    # resp.set_cookie("nickname", "blance")
+    # resp.set_cookie("avatar", "https://thirdwx.qlogo.cn/mmopen/vi_32/Q3auHgzwzM6npDo4Vgk61VOvQ"
+    #                           "da0pAh3ccfZyT6A6rW86ciaiaiaNjdQD9LN9xyxhNJLyu7cnUdL0gWdsPGccNcoQ/132")
     return resp
 
 
@@ -121,13 +128,24 @@ def upload(url):
     # 来源地址
     ip = request.remote_addr
     if request.method == "POST":
+        # 判断是否登录
+        token = request.headers.get("token")
+        temp_user_id = session.get("tempUserId")
         f = request.files["file"]
-        upload_path = os.path.join(SAVE_PATH, f.filename)
-        f.save(upload_path)
-        if VENV == "local":
-            file_url = f"http://{HOST}:{PORT}/download/{f.filename}"
+        if not token or token != temp_user_id:
+            # 未登录，文件放在common文件夹下
+            save_path = os.path.join(BASIC_PATH, "common")
+            file_url = f"http://{HOST}:{PORT}/download/common/{f.filename}" if VENV == "local" else \
+                f"http://{HOST}/download/common/{f.filename}"
         else:
-            file_url = f"http://{HOST}/download/{f.filename}"
+            # 已登录，文件放在userId文件夹下
+            user_id = session.get("userId")
+            save_path = os.path.join(BASIC_PATH, user_id)
+            file_url = f"http://{HOST}:{PORT}/download/{user_id}/{f.filename}" if VENV == "local" else \
+                f"http://{HOST}/download/{user_id}/{f.filename}"
+        os.mkdir(save_path) if not os.path.exists(save_path) else save_path
+        upload_path = os.path.join(save_path, f.filename)
+        f.save(upload_path)
         # 埋入日志
         log.info(f"upload file_url {file_url} by {ip}")
         return jsonify({"status": True, "message": file_url})
@@ -137,28 +155,29 @@ def upload(url):
 
 
 # 文件下载
-@app.route("/download/<path:filename>")
-def download(filename):
+@app.route("/download/<path:dirname>/<path:filename>")
+def download(dirname, filename):
     # 来源地址
     ip = request.remote_addr
     # 判断文件是否存在
-    if filename in os.listdir(SAVE_PATH):
+    save_path = os.path.join(BASIC_PATH, dirname)
+    if filename in os.listdir(save_path):
         # 埋入日志
         log.info(f"download filename {filename} by {ip}")
-        return send_from_directory(SAVE_PATH, filename, as_attachment=True)
+        return send_from_directory(save_path, filename, as_attachment=True)
     # 埋入日志
     log.warning(f"download filename {filename} by {ip} is failed")
     return jsonify({"status": False, "message": "the filename is not exists"})
 
-
+##############################################################################
 # 文件详情
 @app.route('/<re("fileDetail|fileDate"):url>', methods=["GET"])
 def detail(url):
     # 来源地址
     ip = request.remote_addr
     if url == "fileDate":
-        filenames = os.listdir(SAVE_PATH)
-        files = [os.path.join(SAVE_PATH, item) for item in filenames]
+        filenames = os.listdir(BASIC_PATH)
+        files = [os.path.join(BASIC_PATH, item) for item in filenames]
         file_list = []
         for file in files:
             file_date = os.path.getmtime(file)
@@ -190,8 +209,8 @@ def delete(filename):
     ip = request.remote_addr
     try:
         filename = mine_decrypt(filename)
-        if filename in os.listdir(SAVE_PATH):
-            os.remove(os.path.join(SAVE_PATH, filename))
+        if filename in os.listdir(BASIC_PATH):
+            os.remove(os.path.join(BASIC_PATH, filename))
             # 埋入日志
             log.warning(f"delete filename {filename} by {ip}")
             return jsonify({"status": True, "message": "delete success"})
@@ -215,10 +234,10 @@ def file_remove_handle():
     """
         清理规则：大于500开始清理
     """
-    filenames = os.listdir(SAVE_PATH)
+    filenames = os.listdir(BASIC_PATH)
     # {"文件名": "时间", ...}
-    file_map = {os.path.join(SAVE_PATH, item): time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(
-        os.path.getmtime(os.path.join(SAVE_PATH, item)))) for item in filenames}
+    file_map = {os.path.join(BASIC_PATH, item): time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(
+        os.path.getmtime(os.path.join(BASIC_PATH, item)))) for item in filenames}
     # 按时间倒叙排列文件
     file_list = sorted(file_map, key=lambda item: file_map[item], reverse=True)
     # 待清理的文件列表
@@ -244,5 +263,5 @@ def clean_file_handle():
 # 前端跑马灯提示
 
 if __name__ == '__main__':
-    clean_file_handle()
+    # clean_file_handle()
     app.run(host=host, port=PORT, debug=False, use_reloader=False)

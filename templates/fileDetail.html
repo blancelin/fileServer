@@ -142,7 +142,7 @@
                                     // 搜索展示
                                     $("#page").initPage(listCount, 1, fileArry, "Search", data.fileDetailDisplay);
                                     // 展示分页栏
-                                    $(".zzsc").css("display", "block");
+                                    $(".zzsc").css("display", "flex");
                                 } else {
                                     // 先清除无搜索结果
                                     $("#no-downloads").remove()
@@ -172,7 +172,7 @@
                                 $("#page").initPage(listCount, 1, fileList, "Full", data.fileDetailDisplay);
                             }
                             // 展示分页栏
-                            $(".zzsc").css("display", "block");
+                            $(".zzsc").css("display", "flex");
                             // 删除无搜索结果
                             $("#no-downloads").remove()
                         }
@@ -192,7 +192,7 @@
                     $("#page").initPage(listCount, 1, fileList, "Full", data.fileDetailDisplay);
                 }
                 // 展示分页栏
-                $(".zzsc").css("display", "block");
+                $(".zzsc").css("display", "flex");
                 // 删除无搜索结果
                 $("#no-downloads").remove()
             })

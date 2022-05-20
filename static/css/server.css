@@ -1,0 +1,346 @@
+:root {
+    --b-alpha-15: rgba(0, 0, 0, .15);
+    --b-alpha-35: rgba(0, 0, 0, .35);
+    --bg-w-pure: #fafafa;
+    --main-bg-color: white;
+    --theme-color: #4191f5;
+    --txt-b-pure: black;
+}
+
+* {
+    outline: 0;
+    scrollbar-color: var(--b-alpha-15) var(--bg-w-pure);
+    scrollbar-width: thin
+}
+
+sapn {
+    color: inherit;
+}
+
+a {
+    color: inherit;
+    text-decoration: none
+}
+
+body {
+    background-color: var(--main-bg-color);
+    color: var(--txt-b-pure);
+    cursor: default;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    max-width: 100%;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    transition: background-color .25s;
+    -webkit-user-select: none;
+    user-select: none
+}
+
+button:disabled {
+    opacity: .5;
+    pointer-events: none
+}
+
+footer {
+    bottom: 18px;
+    color: var(--b-alpha-35);
+    font-size: 12px;
+    line-height: 20px;
+    position: absolute;
+    transition: color .25s
+}
+
+footer .link {
+    margin: 0
+}
+
+html {
+    height: 100%
+}
+
+.hidden,
+input[type=file] {
+    display: none
+}
+
+.Loading {
+    background: url("../loading.gif") 50% no-repeat #fff;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    opacity: 0.4;
+}
+
+.link {
+    color: var(--theme-color);
+    cursor: pointer;
+    transition: all .25s
+}
+
+.link:link,
+.link:visted {
+    color: var(--theme-color)
+}
+
+.link:hover {
+    color: #a5c220
+}
+
+.link:active {
+    color: rgba(65, 145, 245, .8)
+}
+
+.logo-box {
+    height: 200px;
+    left: calc(50% - 175px);
+    position: absolute;
+    top: calc(50% - 200px);
+    width: 350px
+}
+
+.logo-box img {
+    height: 100%
+}
+
+.user {
+    display: none;
+    width: 125px;
+    height: 125px;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 45%;
+    margin: auto;
+}
+
+.user .avatar {
+    height: 100%;
+    border-radius: 50%;
+    background-color: #eee;
+    overflow: hidden;
+}
+
+.user .avatar img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+.user .userName {
+    font-size: 20px;
+    color: #000000;
+    position: relative;
+    top: 10%;
+    text-align: center;
+}
+
+.user .userName:hover {
+    color: var(--theme-color);
+}
+
+.main-box {
+    margin: 0 calc(50% - 112px);
+    position: absolute;
+    top: 55%;
+    transition: opacity .25s;
+    width: 224px;
+    z-index: 1
+}
+
+.main-btn {
+    border-radius: 10px;
+    cursor: pointer;
+    display: block;
+    font-size: 14px;
+    height: 49px;
+    margin-bottom: 20px;
+    transition: background-color .25s, box-shadow .25s, color .25s, opacity .25s;
+    width: 100%
+}
+
+#fileUrl {
+    height: 18px;
+    font-size: 18px;
+    margin: 30px 0 50px;
+    color: #FC5531;
+    width: 400px;
+    text-align: center;
+}
+
+.popupContent {
+    background-color: var(--bg-w-pure);
+    border-style: solid;
+    border-width: 1px;
+    border-color: #4191f5;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, .05);
+    box-sizing: border-box;
+    font-size: small;
+    height: 300px;
+    left: calc(50% - 250px);
+    overflow: hidden;
+    padding: 40px 0 0;
+    position: absolute;
+    text-align: center;
+    transition: all .25s;
+    top: calc(50% - 200px);
+    width: 500px;
+    z-index: 2
+}
+
+.poupMask {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.35);
+    z-index: 1;
+}
+
+.popup-main-btn {
+    background-color: var(--theme-color);
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+    font-size: small;
+    margin-top: 15px;
+    padding: 10px 35px;
+    transition: all .25s
+}
+
+.popup-main-btn:hover {
+    box-shadow: 0 5px 30px rgba(65, 145, 245, .35)
+}
+
+.popup-main-btn:active {
+    background-color: #fff;
+    color: var(--theme-color)
+}
+
+.popup-title {
+    color: var(--txt-b-pure);
+    font-size: 18px;
+    margin: 0 0 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap
+}
+
+#footer-left {
+    left: 25px;
+    left: calc(env(safe-area-inset-left) + 25px);
+    text-align: left
+}
+
+#download {
+    font-size: 16px;
+    border: none;
+    box-shadow: 0 5px 20px rgba(65, 145, 245, .2);
+    color: var(--theme-color)
+}
+
+#upload {
+    font-size: 16px;
+    background-color: var(--theme-color);
+    border: none;
+    box-shadow: 0 5px 20px rgba(65, 145, 245, .3);
+    color: #fff;
+    transition: background-color .25s, box-shadow .25s, color .25s, opacity .25s
+}
+
+.loginWrap {
+    display: none;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 9;
+}
+
+.loginWrap .loginMask {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.35);
+    z-index: 1;
+}
+
+.loginWrap .loginCol {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 500px;
+    height: 500px;
+    background-color: #fff;
+    border-radius: 10px;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+.loginWrap .loginCol .title {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 60px;
+    border-bottom: 1px solid #e4e4e4;
+    color: #666;
+    font-size: 20px;
+}
+
+.loginWrap .loginCol .title .loginClose {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    top: 17px;
+    right: 17px;
+    transition: all 1s;
+    cursor: pointer;
+}
+
+.loginWrap .loginCol .title .loginClose .icon {
+    width: 100%;
+    height: 100%;
+}
+
+.loginWrap .loginCol .title .loginClose:hover {
+    transform: rotate(360deg);
+}
+
+.loginWrap .loginCol .loginMain {
+    width: 500px;
+    height: 440px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.loginWrap .loginCol .loginMain .loginQR {
+    width: 200px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #e4e4e4;
+    margin-bottom: 50px;
+}
+
+.loginWrap .loginCol .loginMain .tips {
+    color: #666666;
+}

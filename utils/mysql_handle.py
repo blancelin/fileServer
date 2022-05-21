@@ -10,13 +10,13 @@ class MysqlHandle:
 
     @staticmethod
     def connect():
-        encrypt_pwd = "262CAC698D39521813DA6B984D89B8A7AADFB4EF8980227D9CD2727685E1DAB5"
+        encrypt_pwd = "D358935695ED180982FF75E23D6BD24FAADFB4EF8980227D9CD2727685E1DAB5"
         conn = pymysql.connect(
             user="root",
             password=mine_decrypt(encrypt_pwd),
             host="127.0.0.1",
             port=3306,
-            db="fileServer",
+            db="sample",
             cursorclass=DictCursor
         )
         cursor = conn.cursor()

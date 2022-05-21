@@ -84,8 +84,8 @@ def callback():
                                         "da0pAh3ccfZyT6A6rW86ciaiaiaNjdQD9LN9xyxhNJLyu7cnUdL0gWdsPGccNcoQ/132")
     ip_addr = request.form.get("ipAddr")
     # 写入sessiontable
-    sql = f"insert into sessiontable(tempUserId, userId, nickname, avatar, ipAddr) values({temp_user_id}," \
-          f"{user_id}, {nick_name}, {avatar}, {ip_addr});"
+    sql = f"insert into sessiontable(tempUserId, userId, nickname, avatar, ipAddr) values('{temp_user_id}'," \
+          f"'{user_id}', '{nick_name}', '{avatar}', '{ip_addr}');"
     write_func(sql)
     log.info(f"Insert into sessiontable success, {temp_user_id}")
     return jsonify({"status": True, "errcode": 0})

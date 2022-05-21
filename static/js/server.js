@@ -118,7 +118,7 @@ const linkCopy = () => {
 // 登录处理
 const isLoginHandle = () => {
     if (isLogin) {
-        // 跳转下载详情页
+        // 根据userId跳转到详情页
         window.open("/fileDetail", "_self");
     } else {
         // 展示wx登录界面
@@ -131,7 +131,7 @@ const isLoginHandle = () => {
                 if (resp.status) {
                     // 获取cookies
                     let userId = getCookie("userId");
-                    let nickname = getCookie("nickname");
+                    let nickname = decodeURI(getCookie("nickname"));
                     let avatar = getCookie("avatar");
                     // 删除2个cookie，留下1个清空本地存储做判断
                     clearCookie("userId");
@@ -203,7 +203,10 @@ window.onload = function () {
     isLoginCheck();
     // 关闭wx登录界面
     $("#loginClose").on("click", function () {
+        // 取消二维码显示
         $("#loginWrap").css("display", "none");
+        // 取消定时
+        window.clearTimeout(t)
     });
 }
 // 公共方法

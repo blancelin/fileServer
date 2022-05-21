@@ -2,11 +2,15 @@ import os
 import json
 import time
 import socket
+
+
 import requests
 from threading import Timer
+from urllib.parse import quote
 from urllib import request as rq
 from utils.algorithm import mine_decrypt
 from utils.logServer import blance_logging
+from utils.mysql_handle import write_func, query_func
 from werkzeug.routing import BaseConverter
 from flask import Flask, render_template, \
     request, jsonify, send_from_directory, session, make_response
@@ -49,12 +53,9 @@ BASIC_PATH = os.path.join(BASE_DIR, "files")
 os.mkdir(BASIC_PATH) if not os.path.exists(BASIC_PATH) else BASIC_PATH
 # 实例化日志对象
 log = blance_logging()
-# todo 接入马上登录
+# 接入马上登录
 secretKey = mine_decrypt("3C7CF66DA16610A1E09B3C12CAF6FD4A35D2B7B4873B00FAAE42A6D459EAE501"
                          "A9D250471C10A074D2314B28A71E0FC2A9D250471C10A074D2314B28A71E0FC2")
-
-
-# 3. 回调URL：http://47.97.203.223/mashang/login/callback
 
 
 # 二维码
@@ -68,6 +69,8 @@ def qrcode():
     msg = resp.json()["message"] if code == 200 else "失败"
     if msg == "成功":
         qrcode_url = resp.json()["data"]["qrCodeReturnUrl"]
+        session["qrcode_url"] = qrcode_url
+    log.info(f"Get qrcode_url success, {qrcode_url}")
     return jsonify({"qrcode_url": qrcode_url})
 
 
@@ -77,49 +80,53 @@ def callback():
     user_id = request.form.get("userId")
     temp_user_id = request.form.get("tempUserId")
     nick_name = request.form.get("nickname", "Guest")
-    avatar = request.form.get("avatar", "")
+    avatar = request.form.get("avatar", "https://thirdwx.qlogo.cn/mmopen/vi_32/Q3auHgzwzM6npDo4Vgk61VOvQ"
+                                        "da0pAh3ccfZyT6A6rW86ciaiaiaNjdQD9LN9xyxhNJLyu7cnUdL0gWdsPGccNcoQ/132")
     ip_addr = request.form.get("ipAddr")
-    # 回写session
-    session["userId"] = user_id
-    session["nickname"] = nick_name
-    session["tempUserId"] = temp_user_id
-    session["avatar"] = avatar
+    # 写入sessiontable
+    sql = f"insert into sessiontable(tempUserId, userId, nickname, avatar, ipAddr) values({temp_user_id}," \
+          f"{user_id}, {nick_name}, {avatar}, {ip_addr});"
+    write_func(sql)
+    log.info(f"Insert into sessiontable success, {temp_user_id}")
     return jsonify({"status": True, "errcode": 0})
 
 
 # 登录结果响应
-@app.route("/mashang/login/userInfo/<path:temp_user_id>", methods=["GET"])
+@app.route("/mashang/login/userInfo/<path:temp_user_id>", methods=["GET", "POST"])
 def userinfo(temp_user_id):
-    # 服务器
-    if temp_user_id != session.get("tempUserId"):
+    # 查询sessiontable
+    sql = f"select * from sessiontable where tempUserId='{temp_user_id}' and isActive=1;"
+    res = query_func(sql)
+    if not res:
+        log.warning(f"The guest not login, {temp_user_id}")
         return jsonify({"status": False, "message": "the guest not login"})
-    user_id = session.get("userId")
-    nick_name = session.get("nickname")
-    avatar = session.get("avatar")
+    user_id = res["userId"]
+    nick_name = res["nickname"]
+    avatar = res["avatar"]
     resp = make_response(jsonify({"status": True, "message": "%s welcome login" % nick_name}))
     resp.set_cookie("userId", user_id)
-    resp.set_cookie("nickname", nick_name)
+    # cookie不能存储中文
+    resp.set_cookie("nickname", quote(nick_name, encoding="utf-8"))
     resp.set_cookie("avatar", avatar)
-    # 本地测试
-    # resp = make_response(jsonify({"status": True, "message": "%s welcome login" % "blance"}))
-    # resp.set_cookie("userId", "236278")
-    # resp.set_cookie("nickname", "blance")
-    # resp.set_cookie("avatar", "https://thirdwx.qlogo.cn/mmopen/vi_32/Q3auHgzwzM6npDo4Vgk61VOvQ"
-    #                           "da0pAh3ccfZyT6A6rW86ciaiaiaNjdQD9LN9xyxhNJLyu7cnUdL0gWdsPGccNcoQ/132")
+    log.info(f"Guest login success, {nick_name}")
     return resp
 
 
-# 获取请求cookie中的信息
-@app.route("/get_cookie")
-def get_cookie():
+# 退出登录逻辑
+@app.route("/mashang/loginOut/userInfo/<path:temp_user_id>", methods=["GET", "POST"])
+def get_cookie(temp_user_id):
     """
-        获取cookie，通过request.cookies的方式，
-        返回的是一个字典，可以用get的方式
+        退出登录
     """
-    # nickname = request.cookies.get("session")
-    nick_name = request.cookies.get("nickname")  # 获取名字为nickname对应cookie的值
-    print(nick_name)
-    return jsonify({"status": True, "message": "success"})
+    # 后端改写保活状态
+    try:
+        sql = f"update sessiontable set isActive=0 where tempUserId='{temp_user_id}'"
+        write_func(sql)
+        log.info(f"Guest loginOut success, {temp_user_id}")
+        return jsonify({"status": True, "message": "loginOut success"})
+    except Exception as e:
+        log.error(f"loginOut failed:\n{e}")
+        return jsonify({"status": True, "message": "loginOut failed"})
 
 
 # 文件上传，返回：{"status": True, "fileUrl": ""}
@@ -130,16 +137,17 @@ def upload(url):
     if request.method == "POST":
         # 判断是否登录
         token = request.headers.get("token")
-        temp_user_id = session.get("tempUserId")
         f = request.files["file"]
-        if not token or token != temp_user_id:
+        sql = f"select * from sessiontable where tempUserId='{token}' and isActive=1;"
+        if not token or not query_func(sql):
             # 未登录，文件放在common文件夹下
             save_path = os.path.join(BASIC_PATH, "common")
             file_url = f"http://{HOST}:{PORT}/download/common/{f.filename}" if VENV == "local" else \
                 f"http://{HOST}/download/common/{f.filename}"
         else:
             # 已登录，文件放在userId文件夹下
-            user_id = session.get("userId")
+            res = query_func(sql)
+            user_id = res["userId"]
             save_path = os.path.join(BASIC_PATH, user_id)
             file_url = f"http://{HOST}:{PORT}/download/{user_id}/{f.filename}" if VENV == "local" else \
                 f"http://{HOST}/download/{user_id}/{f.filename}"
@@ -161,13 +169,14 @@ def download(dirname, filename):
     ip = request.remote_addr
     # 判断文件是否存在
     save_path = os.path.join(BASIC_PATH, dirname)
-    if filename in os.listdir(save_path):
+    if os.path.isdir(save_path) and filename in os.listdir(save_path):
         # 埋入日志
         log.info(f"download filename {filename} by {ip}")
         return send_from_directory(save_path, filename, as_attachment=True)
     # 埋入日志
     log.warning(f"download filename {filename} by {ip} is failed")
     return jsonify({"status": False, "message": "the filename is not exists"})
+
 
 ##############################################################################
 # 文件详情

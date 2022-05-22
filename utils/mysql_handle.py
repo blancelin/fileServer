@@ -53,4 +53,3 @@ def query_func(sql, args=None):
     res = mql.query_op(sql, args)
     mql.close_db()
     return res
-

@@ -2,9 +2,8 @@ import os
 import json
 import time
 import socket
-
-
 import requests
+
 from threading import Timer
 from urllib.parse import quote
 from urllib import request as rq
@@ -92,8 +91,10 @@ def callback():
 
 
 # 登录结果响应
-@app.route("/mashang/login/userInfo/<path:temp_user_id>", methods=["GET", "POST"])
-def userinfo(temp_user_id):
+@app.route("/mashang/user/login", methods=["GET", "POST"])
+def userinfo():
+    # 获取temp_user_id
+    temp_user_id = request.headers.get("token")
     # 查询sessiontable
     sql = f"select * from sessiontable where tempUserId='{temp_user_id}' and isActive=1;"
     res = query_func(sql)
@@ -103,6 +104,9 @@ def userinfo(temp_user_id):
     user_id = res["userId"]
     nick_name = res["nickname"]
     avatar = res["avatar"]
+    # session存储本次会话凭证
+    session["tempUserId"] = temp_user_id
+    # 设置响应
     resp = make_response(jsonify({"status": True, "message": "%s welcome login" % nick_name}))
     resp.set_cookie("userId", user_id)
     # cookie不能存储中文
@@ -113,20 +117,27 @@ def userinfo(temp_user_id):
 
 
 # 退出登录逻辑
-@app.route("/mashang/loginOut/userInfo/<path:temp_user_id>", methods=["GET", "POST"])
-def get_cookie(temp_user_id):
+@app.route("/mashang/user/loginOut", methods=["GET", "POST"])
+def get_cookie():
     """
         退出登录
     """
-    # 后端改写保活状态
-    try:
-        sql = f"update sessiontable set isActive=0 where tempUserId='{temp_user_id}'"
+    # 会话中获取temp_user_id
+    temp_user_id = session.get("tempUserId")
+    # 为None则通过headers获取
+    if not temp_user_id:
+        temp_user_id = request.headers.get("token")
+    # 防止后端无数据
+    sql = f"select * from sessiontable where tempUserId='{temp_user_id}' and isActive=1;"
+    res = query_func(sql)
+    if res:
+        # 后端改写保活状态
+        sql = f"update sessiontable set isActive=0 where tempUserId='{temp_user_id}';"
         write_func(sql)
         log.info(f"Guest loginOut success, {temp_user_id}")
         return jsonify({"status": True, "message": "loginOut success"})
-    except Exception as e:
-        log.error(f"loginOut failed:\n{e}")
-        return jsonify({"status": True, "message": "loginOut failed"})
+    log.warning(f"loginOut failed, {temp_user_id}")
+    return jsonify({"status": False, "message": "loginOut failed"})
 
 
 # 文件上传，返回：{"status": True, "fileUrl": ""}
@@ -135,8 +146,8 @@ def upload(url):
     # 来源地址
     ip = request.remote_addr
     if request.method == "POST":
-        # 判断是否登录
-        token = request.headers.get("token")
+        # 判断是否有登录会话
+        token = session.get("tempUserId")
         f = request.files["file"]
         sql = f"select * from sessiontable where tempUserId='{token}' and isActive=1;"
         if not token or not query_func(sql):
@@ -162,7 +173,7 @@ def upload(url):
     return render_template("fileServer.html")
 
 
-# 文件下载
+# 文件下载--不用判断是否登录
 @app.route("/download/<path:dirname>/<path:filename>")
 def download(dirname, filename):
     # 来源地址
@@ -178,57 +189,50 @@ def download(dirname, filename):
     return jsonify({"status": False, "message": "the filename is not exists"})
 
 
-##############################################################################
 # 文件详情
-@app.route('/<re("fileDetail|fileDate"):url>', methods=["GET"])
-def detail(url):
+@app.route('/<path:user_id>/<re("fileDetail|fileDate"):url>', methods=["GET"])
+def detail(user_id, url):
     # 来源地址
     ip = request.remote_addr
-    if url == "fileDate":
-        filenames = os.listdir(BASIC_PATH)
-        files = [os.path.join(BASIC_PATH, item) for item in filenames]
-        file_list = []
-        for file in files:
-            file_date = os.path.getmtime(file)
-            file_name = os.path.basename(file)
-            file_size = os.path.getsize(file)
-            file_date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(file_date))
-            if VENV == "local":
-                file_url = f"http://{HOST}:{PORT}/download/{file_name}"
-            else:
-                file_url = f"http://{HOST}/download/{file_name}"
-            file_list.append(
-                {"fileSize": file_size, "fileDate": file_date, "fileName": file_name, "fileUrl": file_url})
-        # 按日期倒序
-        file_list = sorted(file_list, key=lambda item: item["fileDate"], reverse=True)
-        # 转json格式，支持中文
-        file_list = json.dumps(file_list, ensure_ascii=False)
-        # 埋入日志
-        log.info(f"request size {len(file_list)}b by {ip}")
-        return jsonify({"status": True, "message": file_list})
-    # 埋入日志
-    log.info(f"request detail page by {ip}")
-    return render_template("fileDetail.html")
-
-
-# 预留一个文件删除接口
-@app.route("/fileDel/<path:filename>", methods=["DELETE"])
-def delete(filename):
-    # 来源地址
-    ip = request.remote_addr
-    try:
-        filename = mine_decrypt(filename)
-        if filename in os.listdir(BASIC_PATH):
-            os.remove(os.path.join(BASIC_PATH, filename))
+    # 判断是否有登录会话
+    token = session.get("tempUserId")
+    sql = f"select * from sessiontable where tempUserId='{token}' and userId='{user_id}' and isActive=1;"
+    res = query_func(sql)
+    if res:
+        if url == "fileDate":
+            save_path = os.path.join(BASIC_PATH, user_id)
+            os.mkdir(save_path) if not os.path.exists(save_path) else save_path
+            filenames = os.listdir(save_path)
+            files = [os.path.join(save_path, item) for item in filenames]
+            file_list = []
+            for file in files:
+                file_date = os.path.getmtime(file)
+                file_name = os.path.basename(file)
+                file_size = os.path.getsize(file)
+                file_date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(file_date))
+                if VENV == "local":
+                    file_url = f"http://{HOST}:{PORT}/download/{user_id}/{file_name}"
+                else:
+                    file_url = f"http://{HOST}/download/{user_id}/{file_name}"
+                file_list.append(
+                    {"fileSize": file_size, "fileDate": file_date, "fileName": file_name, "fileUrl": file_url})
+            # 按日期倒序
+            file_list = sorted(file_list, key=lambda item: item["fileDate"], reverse=True)
+            # 转json格式，支持中文
+            file_list = json.dumps(file_list, ensure_ascii=False)
             # 埋入日志
-            log.warning(f"delete filename {filename} by {ip}")
-            return jsonify({"status": True, "message": "delete success"})
+            log.info(f"request size {len(file_list)}b by {ip}")
+            return jsonify({"status": True, "message": file_list})
         # 埋入日志
-        log.warning(f"delete filename {filename} by {ip} is failed")
-        return jsonify({"status": False, "message": f"the filename is not exists"})
-    except Exception as e:
-        log.error(f"delete filename {filename} by {ip} is error")
-        return jsonify({"status": False, "message": f"the filename delete failed: {e}"})
+        log.info(f"request detail page by {ip}")
+        return render_template("fileDetail.html")
+    else:
+        if url == "fileDate":
+            # 埋入日志
+            log.warning(f"request size 0b by {ip}")
+        # 埋入日志
+        log.info(f"request detail page failed by {ip}")
+        return jsonify({"status": False, "message": "no login"})
 
 
 # 404.html
@@ -241,36 +245,58 @@ def miss(e):
 # 文件定时清理
 def file_remove_handle():
     """
-        清理规则：大于500开始清理
+        清理规则：
+        公共文件夹每个文件保留30分钟
+        用户文件夹最多存储100各文件
     """
-    filenames = os.listdir(BASIC_PATH)
-    # {"文件名": "时间", ...}
-    file_map = {os.path.join(BASIC_PATH, item): time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(
-        os.path.getmtime(os.path.join(BASIC_PATH, item)))) for item in filenames}
-    # 按时间倒叙排列文件
-    file_list = sorted(file_map, key=lambda item: file_map[item], reverse=True)
-    # 待清理的文件列表
-    clean_file_list = file_list[500:] if len(file_list) >= 500 else []
-    # 清理文件
-    for filename in clean_file_list:
-        try:
-            os.remove(filename)
-            log.info(f"delete {filename} success")
-        except Exception as e:
-            log.error(f"delete {filename} failed * {e}")
-            continue
+    dirs = os.listdir(BASIC_PATH)
+    now = time.time()
+    for dir_ in dirs:
+        path = os.path.join(BASIC_PATH, dir_)
+        if os.path.isdir(path):
+            inner_files = [os.path.join(path, item) for item in os.listdir(path)]
+            if dir_ == "common":
+                for inner_file in inner_files:
+                    file_date = os.path.getmtime(inner_file)
+                    if now - file_date > 1800:
+                        try:
+                            os.remove(inner_file)
+                            log.info(f"delete {inner_file} success")
+                        except Exception as e:
+                            print(e)
+                            log.error(f"delete {inner_file} failed * {e}")
+                            continue
+            else:
+                if len(os.listdir(path)) > 100:
+                    file_map = {inner_file: time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(
+                        os.path.getmtime(inner_file))) for inner_file in inner_files}
+                    # 按时间倒序排列文件
+                    file_list = sorted(file_map, key=lambda item: file_map[item], reverse=True)
+                    # 待清理的文件列表
+                    clean_file_list = file_list[100:]
+                    # 清理文件
+                    for filename in clean_file_list:
+                        try:
+                            os.remove(filename)
+                            log.info(f"delete {filename} success")
+                        except Exception as e:
+                            log.error(f"delete {filename} failed * {e}")
+                            continue
 
 
 # 定时清理函数
 def clean_file_handle():
+    """
+        5分钟定时跑一次
+    """
     log.info(f"start clean server file...")
     file_remove_handle()
-    t = Timer(function=clean_file_handle, interval=1800)
+    t = Timer(function=clean_file_handle, interval=300)
     t.start()
 
 
 # 前端跑马灯提示
 
 if __name__ == '__main__':
-    # clean_file_handle()
+    clean_file_handle()
     app.run(host=host, port=PORT, debug=False, use_reloader=False)

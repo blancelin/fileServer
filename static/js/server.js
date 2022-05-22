@@ -91,11 +91,6 @@ const fileHandle = (file) => {
         }
         // post请求发送表单数据
         xhr.open('POST', '/fileUpload', true);
-        // 添加请求头
-        var token = localStorage.getItem("token");
-        if (token) {
-            xhr.setRequestHeader("token", token);
-        }
         // 发送请求
         xhr.send(formData);
     }
@@ -115,47 +110,54 @@ const linkCopy = () => {
     // 提示框消失
     document.querySelector("#popup").setAttribute("style", "display: none;");
 }
-// 登录处理
+// 登录处理（点击时触发）
 const isLoginHandle = () => {
     if (isLogin) {
         // 根据userId跳转到详情页
-        window.open("/fileDetail", "_self");
+        window.location.href = `/${localStorage.getItem("userId")}/fileDetail`;
     } else {
         // 展示wx登录界面
         $("#loginWrap").css("display", "block");
         // 监听客户是否扫码登录
         t = window.setInterval(function () {
-            // 获取用户信息
-            $.get(`/mashang/login/userInfo/${tempUserId}`, function (resp, status, xhr) {
-                // 登录后的处理
-                if (resp.status) {
-                    // 获取cookies
-                    let userId = getCookie("userId");
-                    let nickname = decodeURI(getCookie("nickname"));
-                    let avatar = getCookie("avatar");
-                    // 删除2个cookie，留下1个清空本地存储做判断
-                    clearCookie("userId");
-                    clearCookie("nickname");
-                    // clearCookie("avatar");
-                    // 浏览器会话存储
-                    localStorage.setItem("userId", userId);
-                    localStorage.setItem("nickname", nickname);
-                    localStorage.setItem("avatar", avatar);
-                    localStorage.setItem("token", tempUserId);
-                    // 关闭扫码登录界面
-                    $("#loginWrap").css("display", "none");
-                    // 隐藏原有图标
-                    $(".logo-box").hide();
-                    // 显示用户信息 
-                    $(".userInfo").css('display', 'block');
-                    // 更新用户图标
-                    $("#avatar").attr('src', avatar);
-                    // 显示用户名称
-                    $("#nickName").html(nickname);
-                    // 更改登录标识
-                    isLogin = true;
-                    // 取消定时
-                    window.clearTimeout(t)
+            // ajax请求
+            $.ajax({
+                url: "/mashang/user/login",
+                type: "get",
+                headers: {
+                    "token": tempUserId
+                },
+                success: function(resp) {
+                    // 登录后的处理
+                    if (resp.status) {
+                        // 获取cookies
+                        let userId = getCookie("userId");
+                        let nickname = decodeURI(getCookie("nickname"));
+                        let avatar = getCookie("avatar");
+                        // 删除2个cookie，留下1个清空本地存储做判断
+                        clearCookie("userId");
+                        clearCookie("nickname");
+                        // clearCookie("avatar");
+                        // 浏览器会话存储
+                        localStorage.setItem("userId", userId);
+                        localStorage.setItem("nickname", nickname);
+                        localStorage.setItem("avatar", avatar);
+                        localStorage.setItem("token", tempUserId);
+                        // 关闭扫码登录界面
+                        $("#loginWrap").css("display", "none");
+                        // 隐藏原有图标
+                        $(".logo-box").hide();
+                        // 显示用户信息 
+                        $(".userInfo").css('display', 'block');
+                        // 更新用户图标
+                        $("#avatar").attr('src', avatar);
+                        // 显示用户名称
+                        $("#nickName").html("欢迎你，" + nickname);
+                        // 更改登录标识
+                        isLogin = true;
+                        // 取消定时
+                        window.clearTimeout(t)
+                    }
                 }
             })
         }, 1000)
@@ -173,7 +175,7 @@ const isLoginCheck = () => {
         // 更新用户图标
         $("#avatar").attr('src', avatar);
         // 显示用户名称
-        $("#nickName").html(nickname);
+        $("#nickName").html("欢迎你，" + nickname);
         // 更改登录标识
         isLogin = true;
     } else {
@@ -181,7 +183,7 @@ const isLoginCheck = () => {
         $.get("/mashang/login/qrCodeReturnUrl", function (result) {
             var qrcodeUrl = result.qrcode_url;
             tempUserId = qrcodeUrl.split("=")[1];
-            console.log(tempUserId);
+            // console.log(tempUserId);
             $("#loginQR").html("").qrcode({
                 render: "canvas",
                 width: 150,
@@ -192,10 +194,6 @@ const isLoginCheck = () => {
             })
         })
     }
-}
-// 清空浏览器本地存储
-if(!(getCookie("avatar"))) {
-    localStorage.clear();
 }
 // 页面加载完成
 window.onload = function () {
@@ -208,6 +206,40 @@ window.onload = function () {
         // 取消定时
         window.clearTimeout(t)
     });
+    // nickname绑定鼠标移动事件
+    $(".user .userName").mouseover(function () {
+        $(".userName").css("color", "#000000");
+        $("#nickName").html("退出登录");
+    });
+    $(".user .userName").mouseout(function () {
+        $(".userName").css("color", "#4191f5");
+        $("#nickName").html("欢迎你，" + localStorage.getItem("nickname"));
+    });
+    // 监听点击退出登录
+    $(".user .userName").on("click", function () {
+        // 清除最后一个cookie
+        clearCookie("avatar");
+        // 刷新当前页
+        window.location.reload();
+    });
+}
+// 清空浏览器本地存储
+if(!(getCookie("avatar"))) {
+    // 当有本地存储时，调退出登录接口
+    if (localStorage.length > 0) {
+        // 调退出登录接口
+        $.ajax({
+            url: "/mashang/user/loginOut",
+            type: "get",
+            headers: {
+                "token": localStorage.getItem("token")
+            },
+            success: function(resp) {
+                console.log(resp);
+            }
+        })
+    }
+    localStorage.clear();
 }
 // 公共方法
 // 设置cookie

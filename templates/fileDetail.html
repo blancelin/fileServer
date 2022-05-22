@@ -15,7 +15,7 @@
             async : false
         });
         // 数据获取
-        $.get("/fileDate", function (result) {
+        $.get(`/${localStorage.getItem("userId")}/fileDate`, function (result) {
             fileList = JSON.parse(result.message);
         })
         // 总长度
@@ -99,7 +99,7 @@
                 <svg id="svg2" style="display: none;"></svg>
             </cr-icon-button>
         </div>
-        <div id="rightContet">注意，文件会定时清理！</div>
+        <div id="rightContet">超过100个文件会定时清理</div>
     </div>
     <div id="downloadsList">
     </div>

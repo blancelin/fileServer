@@ -135,14 +135,11 @@ input[type=file] {
 
 .user .userName {
     font-size: 20px;
-    color: #000000;
+    color: var(--theme-color);;
     position: relative;
     top: 10%;
     text-align: center;
-}
-
-.user .userName:hover {
-    color: var(--theme-color);
+    font-weight: bold;
 }
 
 .main-box {

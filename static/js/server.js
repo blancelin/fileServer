@@ -199,13 +199,20 @@ const isLoginCheck = () => {
 window.onload = function () {
     // 登录校验
     isLoginCheck();
-    // 关闭wx登录界面
+    // 关闭wx登录界面1
     $("#loginClose").on("click", function () {
         // 取消二维码显示
         $("#loginWrap").css("display", "none");
         // 取消定时
         window.clearTimeout(t)
     });
+    // 关闭微信登录界面2
+    $("#loginMask").on("click", function() {
+        // 取消二维码显示
+        $("#loginWrap").css("display", "none");
+        // 取消定时
+        window.clearTimeout(t)
+    })
     // nickname绑定鼠标移动事件
     $(".user .userName").mouseover(function () {
         $(".userName").css("color", "#000000");

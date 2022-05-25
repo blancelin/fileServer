@@ -295,8 +295,8 @@ def clean_file_handle():
     t.start()
 
 
-# 前端跑马灯提示
+# 定时任务放在main外面
+clean_file_handle()
 
 if __name__ == '__main__':
-    clean_file_handle()
     app.run(host=host, port=PORT, debug=False, use_reloader=False)

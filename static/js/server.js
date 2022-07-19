@@ -42,6 +42,26 @@ $(function () {
         e.dataTransfer.clearData();
     }, false)
 })
+// 绑定粘贴事件
+function bindPaste(){
+    // 粘贴区域
+    var box = document.getElementsByTagName("body")[0];
+    // 定义body标签绑定的事件函数
+    var fun = function (e) {
+        // 获取clipboardData对象
+        var data = e.clipboardData || window.clipboardData;
+        // 获取文件对象
+        var file = data.items[0].getAsFile();
+        // 判断文件是否存在
+        if (file) {
+            // 文件上传处理
+            fileHandle(file);
+        }
+    }
+    // 通过body标签绑定粘贴事件
+    box.removeEventListener("paste", fun);
+    box.addEventListener("paste", fun);
+} 
 // 选择文件上传
 const uploadFile = async () => {
     // 获取文件列表对象
@@ -197,9 +217,11 @@ const isLoginCheck = () => {
 }
 // 页面加载完成
 window.onload = function () {
+    // 剪切监听
+    bindPaste();
     // 登录校验
     isLoginCheck();
-    // 关闭wx登录界面1
+    // 关闭微信登录界面1
     $("#loginClose").on("click", function () {
         // 取消二维码显示
         $("#loginWrap").css("display", "none");

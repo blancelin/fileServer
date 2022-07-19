@@ -33,7 +33,7 @@ app.config['JSON_AS_ASCII'] = False
 # SECRET_KEY
 app.config['SECRET_KEY'] = "blance"
 # 当前环境
-VENV = "local"  # TODO 环境切换时：local or prod
+VENV = "prod"  # TODO 环境切换时：local or prod
 if VENV == "local":
     # 局域网ip
     HOST = socket.gethostbyname(socket.gethostname())

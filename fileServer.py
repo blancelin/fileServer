@@ -43,7 +43,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # 文件存储路径
 SAVE_PATH = os.path.join(BASE_DIR, "files")
 # 不存在则新建
-os.mkdir(SAVE_PATH) if not os.path.exists(SAVE_PATH) else SAVE_PATH 
+os.mkdir(SAVE_PATH) if not os.path.exists(SAVE_PATH) else SAVE_PATH
 # 实例化日志对象
 log = blance_logging()
 
@@ -91,7 +91,7 @@ def detail(url):
     ip = request.remote_addr
     if url == "fileDate":
         filenames = os.listdir(SAVE_PATH)
-        files = [os.path.join(SAVE_PATH, item) for item in filenames]
+        files = [os.path.join(SAVE_PATH, item) for item in filenames if not os.path.isdir(os.path.join(SAVE_PATH, item))]
         file_list = []
         for file in files:
             file_date = os.path.getmtime(file)

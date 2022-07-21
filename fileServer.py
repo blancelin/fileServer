@@ -116,13 +116,12 @@ def detail(url):
     return render_template("fileDetail.html")
 
 
-# 预留一个文件删除接口
+# 文件删除接口
 @app.route("/fileDel/<path:filename>", methods=["DELETE"])
 def delete(filename):
     # 来源地址
     ip = request.remote_addr
     try:
-        filename = mine_decrypt(filename)
         if filename in os.listdir(SAVE_PATH):
             os.remove(os.path.join(SAVE_PATH, filename))
             # 埋入日志

@@ -78,7 +78,14 @@
                 t = setTimeout("wordMove()", 10);
             }
         }
-        window.onload = wordMove;
+        // 删除处理
+        function delFile(data) {
+            window.alert(data);
+        }
+        window.onload = function() {
+            wordMove();
+            
+        };
     </script>
 </head>
 
@@ -236,6 +243,12 @@
                             + `<span>`
                             + `上传时间：${this.fileDate}`
                             + `</sapn>`
+                            + `</div>`
+                            + `</div>`
+                            + `<div id="others">`
+                            + `<input type="button" value="删除" name="delFile" onclick="delFile('${this.fileName}')">`
+                            + `</input>`
+                            + `</div>`
                             + `</div>`
                         $("#downloadsList").append(content);
                     })

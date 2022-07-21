@@ -145,6 +145,18 @@ label {
 	padding-top: 16px;
 }
 
+#others > input {
+	background-color: #4191f5;
+	color: #fff;
+	font-size: 16px;
+	cursor:pointer;
+	outline: 0;
+	border-top-right-radius: 10px;
+	border: none;
+	width: 50px;
+	height: 30px;
+}
+
 #file-link {
 	font-weight: bolder;
 	color: rgb(26, 115, 232);

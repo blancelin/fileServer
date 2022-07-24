@@ -90,7 +90,16 @@
                         // 请求成功后的回调函数
                         if (result.message.indexOf("success") >= 0) {
                             // 删除成功,移除页面元素
-                            document.evaluate(`//div[@id="content"][.//a[text()="${data}"]]`, document).iterateNext().remove()
+                            document.evaluate(`//div[@id="content"][.//a[text()="${data}"]]`, document).iterateNext().remove();
+                            // 从fileList中移除数据
+                            var index;
+                            for (let i=0; i<fileList.length; i++) {
+                                if (fileList[i].fileName == data) {
+                                    index = i;
+                                    break;
+                                }
+                            }
+                            fileList.splice(index, 1);
                         } else {
                             window.alert("暂时没有删除权限")
                         }

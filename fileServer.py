@@ -235,6 +235,37 @@ def detail(user_id, url):
         return jsonify({"status": False, "message": "no login"})
 
 
+# 文件删除接口
+@app.route('/<path:user_id>/fileDel/<path:filename>', methods=["DELETE"])
+def delete(user_id, filename):
+    # 来源地址
+    ip = request.remote_addr
+    # 判断是否有登录会话
+    token = session.get("tempUserId")
+    sql = f"select * from sessiontable where tempUserId='{token}' and userId='{user_id}' and isActive=1;"
+    res = query_func(sql)
+    if res:
+        save_path = os.path.join(BASIC_PATH, user_id)
+        os.mkdir(save_path) if not os.path.exists(save_path) else save_path
+        filenames = os.listdir(save_path)
+        try:
+            if filename in filenames:
+                os.remove(os.path.join(save_path, filename))
+                # 埋入日志
+                log.warning(f"{user_id} delete file {filename} by {ip}")
+                return jsonify({"status": True, "message": "delete success"})
+            # 埋入日志
+            log.warning(f"{user_id} delete filename {filename} by {ip} is failed")
+            return jsonify({"status": False, "message": f"the filename is not exists"})
+        except Exception as e:
+            log.error(f"{user_id} delete filename {filename} by {ip} is error")
+            return jsonify({"status": False, "message": f"the filename delete failed: {e}"})
+    else:
+        # 埋入日志
+        log.info(f"{user_id} delete file {filename} failed by {ip}")
+        return jsonify({"status": False, "message": "no login"})
+
+
 # 404.html
 @app.errorhandler(404)
 def miss(e):

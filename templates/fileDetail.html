@@ -78,7 +78,29 @@
                 t = setTimeout("wordMove()", 10);
             }
         }
-        window.onload = wordMove;
+        // 删除处理
+        function delFile(data) {
+            var confirm = window.confirm(`是否确认删除文件：${data}?`);
+            if (confirm) {
+                // 调文件删除接口
+                $.ajax({
+                    url: `/${localStorage.getItem("userId")}/fileDel/${data}`,
+                    type: "DELETE",
+                    success:function (result) {
+                        // 请求成功后的回调函数
+                        if (result.message.indexOf("success") >= 0) {
+                            // 删除成功,移除页面元素
+                            document.evaluate(`//div[@id="content"][.//a[text()="${data}"]]`, document).iterateNext().remove()
+                        } else {
+                            window.alert("暂时没有删除权限")
+                        }
+                    }
+                })
+            }
+        }
+        window.onload = function() {
+            wordMove();
+        };
     </script>
 </head>
 
@@ -236,6 +258,12 @@
                             + `<span>`
                             + `上传时间：${this.fileDate}`
                             + `</sapn>`
+                            + `</div>`
+                            + `</div>`
+                            + `<div id="others">`
+                            + `<input type="button" value="删除" name="delFile" onclick="delFile('${this.fileName}')">`
+                            + `</input>`
+                            + `</div>`
                             + `</div>`
                         $("#downloadsList").append(content);
                     })

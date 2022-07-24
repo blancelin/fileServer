@@ -10,6 +10,7 @@
     <script src="../static/js/page.js" type="text/javascript"></script>
     <script type="text/javascript">
         var fileList;
+        var fileArray;
         // 取消异步
         $.ajaxSetup({
             async : false
@@ -91,6 +92,18 @@
                         if (result.message.indexOf("success") >= 0) {
                             // 删除成功,移除页面元素
                             document.evaluate(`//div[@id="content"][.//a[text()="${data}"]]`, document).iterateNext().remove();
+                            // 搜索结果
+                            if (document.querySelectorAll(".pageItemActiveSearch").length > 0) {
+                                // 从fileArray中移除数据
+                                var idx;
+                                for (let i=0; i<fileArray.length; i++) {
+                                    if (fileArray[i].fileName == data) {
+                                        idx = i;
+                                        break;
+                                    }
+                                }
+                                fileArray.splice(idx, 1);
+                            }
                             // 从fileList中移除数据
                             var index;
                             for (let i=0; i<fileList.length; i++) {
@@ -158,20 +171,20 @@
                             $("#prompt").text("");
                             // 搜索检索
                             if (value.length >= 3) {
-                                let fileArry = new Array();
+                                fileArray = new Array();
                                 $.each(fileList, function () {
                                     let fileName = this.fileName;
                                     // 转小写之后判断
                                     if (fileName.toLowerCase().includes(value.toLowerCase())) {
-                                        fileArry.push(this);
+                                        fileArray.push(this);
                                     }
                                 })
-                                let listCount = fileArry.length;
+                                let listCount = fileArray.length;
                                 if (listCount > 0) {
                                     // 先清除无搜索结果
                                     $("#no-downloads").remove()
                                     // 搜索展示
-                                    $("#page").initPage(listCount, 1, fileArry, "Search", data.fileDetailDisplay);
+                                    $("#page").initPage(listCount, 1, fileArray, "Search", data.fileDetailDisplay);
                                     // 展示分页栏
                                     $(".zzsc").css("display", "flex");
                                 } else {

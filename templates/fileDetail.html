@@ -80,22 +80,22 @@
             }
         }
         // 删除处理
-        function delFile(data) {
-            var confirm = window.confirm(`是否确认删除文件：${data}?`);
+        function delFile(fileName) {
+            var confirm = window.confirm(`是否确认删除文件：${fileName}?`);
             if (confirm) {
                 // 调文件删除接口
                 $.ajax({
-                    url: `/${localStorage.getItem("userId")}/fileDel/${data}`,
+                    url: `/${localStorage.getItem("userId")}/fileDel/${fileName}`,
                     type: "DELETE",
                     success:function (result) {
                         // 请求成功后的回调函数
                         if (result.message.indexOf("success") >= 0) {
                             // 删除成功,移除页面元素
-                            document.evaluate(`//div[@id="content"][.//a[text()="${data}"]]`, document).iterateNext().remove();
+                            document.evaluate(`//div[@id="content"][.//a[text()="${fileName}"]]`, document).iterateNext().remove();
                             // 从fileList中移除数据
                             let index;
                             for (let i=0; i<fileList.length; i++) {
-                                if (fileList[i].fileName == data) {
+                                if (fileList[i].fileName == fileName) {
                                     index = i;
                                     break;
                                 }
@@ -108,7 +108,7 @@
                                 // 从fileArray中移除数据
                                 let idx;
                                 for (let i=0; i<fileArray.length; i++) {
-                                    if (fileArray[i].fileName == data) {
+                                    if (fileArray[i].fileName == fileName) {
                                         idx = i;
                                         break;
                                     }

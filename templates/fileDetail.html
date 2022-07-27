@@ -118,6 +118,12 @@
                                 let currentPage = parseInt($(".pageItemActiveSearch").attr("page-data"));
                                 // 当前列表长度
                                 let count = fileArray.length;
+                                // 获取文件列表个数
+                                let contentLen = document.querySelectorAll("#content").length;
+                                // 判断是否需要减1
+                                if (currentPage > 1 && contentLen == 0) {
+                                    currentPage -= 1;
+                                }
                                 // 搜索展示
                                 $("#page").initPage(count, currentPage, fileArray, "Search", data.fileDetailDisplay);
                                 // 展示分页栏
@@ -125,6 +131,12 @@
                             } else {
                                 // 获取当前页
                                 let currentPage = parseInt($(".pageItemActiveFull").attr("page-data"));
+                                // 获取文件列表个数
+                                let contentLen = document.querySelectorAll("#content").length;
+                                // 判断是否需要减1
+                                if (currentPage > 1 && contentLen == 0) {
+                                    currentPage -= 1;
+                                }
                                 // 搜索展示
                                 $("#page").initPage(listCount, currentPage, fileList, "Full", data.fileDetailDisplay);
                                 // 展示分页栏

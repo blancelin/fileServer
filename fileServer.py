@@ -278,7 +278,7 @@ def file_remove_handle():
     """
         清理规则：
         公共文件夹每个文件保留30分钟
-        用户文件夹最多存储100各文件
+        用户文件夹最多存储100个文件
     """
     dirs = os.listdir(BASIC_PATH)
     now = time.time()

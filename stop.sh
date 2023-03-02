@@ -1,1 +1,1 @@
-ps -aux | grep 4288 | grep -v "grep" | awk '{print $2}' |xargs kill -9
+ps -aux | grep 2048 | grep -v "grep" | awk '{print $2}' |xargs kill -9

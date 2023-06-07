@@ -43,7 +43,7 @@ else:
     HOST = json.loads(rq.urlopen("https://api.ipify.org/?format=json").read())["ip"]
     host = "127.0.0.1"
 # 端口
-PORT = int(mine_decrypt("DDC374AAF9609B6DC8249ECAD3542AA2AADFB4EF8980227D9CD2727685E1DAB5"))
+PORT = int(mine_decrypt("D7CDBDE0F480237F0240944C6E827763AADFB4EF8980227D9CD2727685E1DAB5"))
 # 服务根路径
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # 文件存储路径

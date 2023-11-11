@@ -1,6 +1,5 @@
-var isLogin;
-var tempUserId;
 var t;
+var isLogin;
 // 激活选择文件
 const uploadFunc = () => {
     document.querySelector("#file").click();
@@ -130,6 +129,39 @@ const linkCopy = () => {
     // 提示框消失
     document.querySelector("#popup").setAttribute("style", "display: none;");
 }
+// 判断是否登录
+const isLoginCheck = () => {
+    if (localStorage.getItem("userId")) {
+        let nickname = localStorage.getItem("nickname");
+        let avatar = localStorage.getItem("avatar");
+        // 隐藏原有图标
+        $(".logo-box").hide();
+        // 显示用户信息 
+        $(".userInfo").css('display', 'block');
+        // 更新用户图标
+        $("#avatar").attr('src', avatar);
+        // 显示用户名称
+        $("#nickName").html("欢迎你，" + nickname);
+        // 更改登录标识
+        isLogin = true;
+    } else {
+        // 二维码展示
+        $.get("/mashang/login/qrCodeReturnUrl", function (result) {
+            var qrcodeUrl = result.qrcode_url;
+            var tempUserId = qrcodeUrl.split("=")[1];
+            console.log(tempUserId);
+            localStorage.setItem("tempUserId", tempUserId);
+            $("#loginQR").html("").qrcode({
+                render: "canvas",
+                width: 150,
+                height: 150,
+                foreground: "#0099ff",
+                background: "#f9f9f9",
+                text: encodeURI(qrcodeUrl),
+            })
+        })
+    }
+}
 // 登录处理（点击时触发）
 const isLoginHandle = () => {
     if (isLogin) {
@@ -138,6 +170,8 @@ const isLoginHandle = () => {
     } else {
         // 展示wx登录界面
         $("#loginWrap").css("display", "block");
+        // 触发websocket请求
+        websocketHandle();
         // 监听客户是否扫码登录
         t = window.setInterval(function () {
             // ajax请求
@@ -145,7 +179,7 @@ const isLoginHandle = () => {
                 url: "/mashang/user/login",
                 type: "get",
                 headers: {
-                    "token": tempUserId
+                    "authorization": localStorage.getItem("jwtToken")
                 },
                 success: function(resp) {
                     // 登录后的处理
@@ -183,37 +217,30 @@ const isLoginHandle = () => {
         }, 1000)
     }
 }
-// 判断是否登录
-const isLoginCheck = () => {
-    if (localStorage.getItem("userId")) {
-        let nickname = localStorage.getItem("nickname");
-        let avatar = localStorage.getItem("avatar");
-        // 隐藏原有图标
-        $(".logo-box").hide();
-        // 显示用户信息 
-        $(".userInfo").css('display', 'block');
-        // 更新用户图标
-        $("#avatar").attr('src', avatar);
-        // 显示用户名称
-        $("#nickName").html("欢迎你，" + nickname);
-        // 更改登录标识
-        isLogin = true;
-    } else {
-        // 二维码展示
-        $.get("/mashang/login/qrCodeReturnUrl", function (result) {
-            var qrcodeUrl = result.qrcode_url;
-            tempUserId = qrcodeUrl.split("=")[1];
-            // console.log(tempUserId);
-            $("#loginQR").html("").qrcode({
-                render: "canvas",
-                width: 150,
-                height: 150,
-                foreground: "#0099ff",
-                background: "#f9f9f9",
-                text: encodeURI(qrcodeUrl),
-            })
-        })
-    }
+// websocket
+function websocketHandle() {
+    const socket = io.connect('http://47.97.203.223');
+    // 是否连接成功
+    socket.on('connect', () => {
+        console.log("Sever connected")
+    });
+    // 监听服务器在指定房间内发送的token事件，并在接收到令牌后执行相应的操作
+    socket.on('token', data => {
+        // 判断是不是这个房间的
+        if (data.room === localStorage.getItem("tempUserId")) {
+            const token = data.token;
+            // 在这里执行你希望的操作，例如将令牌保存到本地存储中或发送给其他接口
+            alert(token);
+        }
+    });
+    // 监听服务器发送的error事件，并在接收错误信息后执行相应的操作
+    socket.on('error', data => {
+        const message = data.message;
+        // 在这里执行你希望的操作，例如显示错误消息给用户
+        console.log(message);
+    });
+    // 向服务器发送request_token事件，请求生成JWT令牌
+    socket.emit('request_token');
 }
 // 页面加载完成
 window.onload = function () {

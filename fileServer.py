@@ -7,12 +7,12 @@ import requests
 from threading import Timer
 from urllib.parse import quote
 from urllib import request as rq
-from utils.algorithm import mine_decrypt
 from utils.logServer import blance_logging
-from utils.mysql_handle import write_func, query_func
+from utils.algorithm import mine_decrypt, generate_jwt_token
 from werkzeug.routing import BaseConverter
 from flask import Flask, render_template, \
     request, jsonify, send_from_directory, session, make_response
+from flask_socketio import SocketIO, emit
 
 
 class RegexConverter(BaseConverter):
@@ -32,6 +32,8 @@ app.url_map.converters["re"] = RegexConverter
 app.config['JSON_AS_ASCII'] = False
 # SECRET_KEY
 app.config['SECRET_KEY'] = "blance"
+# socketio
+socketio = SocketIO(app)
 # 当前环境
 VENV = "prod"  # TODO 环境切换时：local or prod
 if VENV == "local":
@@ -73,7 +75,15 @@ def qrcode():
     return jsonify({"qrcode_url": qrcode_url})
 
 
+# WebSocket连接事件
+@socketio.on("connect")
+def handle_connect():
+    print("Client connected")
+
+
 # 回调接口
+# 处理客户端请求并发送JWT令牌
+@socketio.on("request_token")
 @app.route("/mashang/login/callback", methods=["POST"])
 def callback():
     user_id = request.form.get("userId")
@@ -82,95 +92,95 @@ def callback():
     avatar = request.form.get("avatar", "https://thirdwx.qlogo.cn/mmopen/vi_32/Q3auHgzwzM6npDo4Vgk61VOvQ"
                                         "da0pAh3ccfZyT6A6rW86ciaiaiaNjdQD9LN9xyxhNJLyu7cnUdL0gWdsPGccNcoQ/132")
     ip_addr = request.form.get("ipAddr")
-    # 写入sessiontable
-    sql = f"insert into sessiontable(tempUserId, userId, nickname, avatar, ipAddr) values('{temp_user_id}'," \
-          f"'{user_id}', '{nick_name}', '{avatar}', '{ip_addr}');"
-    write_func(sql)
-    log.info(f"Insert into sessiontable success, {temp_user_id}")
+    payload = {"user_id": user_id, "nick_name": nick_name, "avatar": avatar, "ip_addr": ip_addr}
+    token = generate_jwt_token(payload)
+    # 在指定房间内发送JWT令牌
+    emit("token", {"token": token, "room": temp_user_id})
+    log.info(f"generate jwt token success, {token}")
     return jsonify({"status": True, "errcode": 0})
 
 
 # 登录结果响应
-@app.route("/mashang/user/login", methods=["GET", "POST"])
-def userinfo():
-    # 获取temp_user_id
-    temp_user_id = request.headers.get("token")
-    # 查询sessiontable
-    sql = f"select * from sessiontable where tempUserId='{temp_user_id}' and isActive=1;"
-    res = query_func(sql)
-    if not res:
-        log.warning(f"The guest not login, {temp_user_id}")
-        return jsonify({"status": False, "message": "the guest not login"})
-    user_id = res["userId"]
-    nick_name = res["nickname"]
-    avatar = res["avatar"]
-    # session存储本次会话凭证
-    session["tempUserId"] = temp_user_id
-    # 设置响应
-    resp = make_response(jsonify({"status": True, "message": "%s welcome login" % nick_name}))
-    resp.set_cookie("userId", user_id)
-    # cookie不能存储中文
-    resp.set_cookie("nickname", quote(nick_name, encoding="utf-8"))
-    resp.set_cookie("avatar", avatar)
-    log.info(f"Guest login success, {nick_name}")
-    return resp
+# @app.route("/mashang/user/login", methods=["GET", "POST"])
+# def userinfo():
+#     # 获取temp_user_id
+#     temp_user_id = request.headers.get("token")
+#     # 查询sessiontable
+#     sql = f"select * from sessiontable where tempUserId='{temp_user_id}' and isActive=1;"
+#     res = query_func(sql)
+#     if not res:
+#         log.warning(f"The guest not login, {temp_user_id}")
+#         return jsonify({"status": False, "message": "the guest not login"})
+#     user_id = res["userId"]
+#     nick_name = res["nickname"]
+#     avatar = res["avatar"]
+#     # session存储本次会话凭证
+#     session["tempUserId"] = temp_user_id
+#     # 设置响应
+#     resp = make_response(jsonify({"status": True, "message": "%s welcome login" % nick_name}))
+#     resp.set_cookie("userId", user_id)
+#     # cookie不能存储中文
+#     resp.set_cookie("nickname", quote(nick_name, encoding="utf-8"))
+#     resp.set_cookie("avatar", avatar)
+#     log.info(f"Guest login success, {nick_name}")
+#     return resp
 
 
 # 退出登录逻辑
-@app.route("/mashang/user/loginOut", methods=["GET", "POST"])
-def get_cookie():
-    """
-        退出登录
-    """
-    # 会话中获取temp_user_id
-    temp_user_id = session.get("tempUserId")
-    # 为None则通过headers获取
-    if not temp_user_id:
-        temp_user_id = request.headers.get("token")
-    # 防止后端无数据
-    sql = f"select * from sessiontable where tempUserId='{temp_user_id}' and isActive=1;"
-    res = query_func(sql)
-    if res:
-        # 后端改写保活状态
-        sql = f"update sessiontable set isActive=0 where tempUserId='{temp_user_id}';"
-        write_func(sql)
-        log.info(f"Guest loginOut success, {temp_user_id}")
-        return jsonify({"status": True, "message": "loginOut success"})
-    log.warning(f"loginOut failed, {temp_user_id}")
-    return jsonify({"status": False, "message": "loginOut failed"})
+# @app.route("/mashang/user/loginOut", methods=["GET", "POST"])
+# def get_cookie():
+#     """
+#         退出登录
+#     """
+#     # 会话中获取temp_user_id
+#     temp_user_id = session.get("tempUserId")
+#     # 为None则通过headers获取
+#     if not temp_user_id:
+#         temp_user_id = request.headers.get("token")
+#     # 防止后端无数据
+#     sql = f"select * from sessiontable where tempUserId='{temp_user_id}' and isActive=1;"
+#     res = query_func(sql)
+#     if res:
+#         # 后端改写保活状态
+#         sql = f"update sessiontable set isActive=0 where tempUserId='{temp_user_id}';"
+#         write_func(sql)
+#         log.info(f"Guest loginOut success, {temp_user_id}")
+#         return jsonify({"status": True, "message": "loginOut success"})
+#     log.warning(f"loginOut failed, {temp_user_id}")
+#     return jsonify({"status": False, "message": "loginOut failed"})
 
 
 # 文件上传，返回：{"status": True, "fileUrl": ""}
-@app.route('/<re("index|fileUpload"):url>', methods=["GET", "POST"])
-def upload(url):
-    # 来源地址
-    ip = request.remote_addr
-    if request.method == "POST":
-        # 判断是否有登录会话
-        token = session.get("tempUserId")
-        f = request.files["file"]
-        sql = f"select * from sessiontable where tempUserId='{token}' and isActive=1;"
-        if not token or not query_func(sql):
-            # 未登录，文件放在common文件夹下
-            save_path = os.path.join(BASIC_PATH, "common")
-            file_url = f"http://{HOST}:{PORT}/download/common/{f.filename}" if VENV == "local" else \
-                f"http://{HOST}/download/common/{f.filename}"
-        else:
-            # 已登录，文件放在userId文件夹下
-            res = query_func(sql)
-            user_id = res["userId"]
-            save_path = os.path.join(BASIC_PATH, user_id)
-            file_url = f"http://{HOST}:{PORT}/download/{user_id}/{f.filename}" if VENV == "local" else \
-                f"http://{HOST}/download/{user_id}/{f.filename}"
-        os.mkdir(save_path) if not os.path.exists(save_path) else save_path
-        upload_path = os.path.join(save_path, f.filename)
-        f.save(upload_path)
-        # 埋入日志
-        log.info(f"upload file_url {file_url} by {ip}")
-        return jsonify({"status": True, "message": file_url})
-    # 埋入日志
-    log.info(f"request index page by {ip}")
-    return render_template("fileServer.html")
+# @app.route('/<re("index|fileUpload"):url>', methods=["GET", "POST"])
+# def upload(url):
+#     # 来源地址
+#     ip = request.remote_addr
+#     if request.method == "POST":
+#         # 判断是否有登录会话
+#         token = session.get("tempUserId")
+#         f = request.files["file"]
+#         sql = f"select * from sessiontable where tempUserId='{token}' and isActive=1;"
+#         if not token or not query_func(sql):
+#             # 未登录，文件放在common文件夹下
+#             save_path = os.path.join(BASIC_PATH, "common")
+#             file_url = f"http://{HOST}:{PORT}/download/common/{f.filename}" if VENV == "local" else \
+#                 f"http://{HOST}/download/common/{f.filename}"
+#         else:
+#             # 已登录，文件放在userId文件夹下
+#             res = query_func(sql)
+#             user_id = res["userId"]
+#             save_path = os.path.join(BASIC_PATH, user_id)
+#             file_url = f"http://{HOST}:{PORT}/download/{user_id}/{f.filename}" if VENV == "local" else \
+#                 f"http://{HOST}/download/{user_id}/{f.filename}"
+#         os.mkdir(save_path) if not os.path.exists(save_path) else save_path
+#         upload_path = os.path.join(save_path, f.filename)
+#         f.save(upload_path)
+#         # 埋入日志
+#         log.info(f"upload file_url {file_url} by {ip}")
+#         return jsonify({"status": True, "message": file_url})
+#     # 埋入日志
+#     log.info(f"request index page by {ip}")
+#     return render_template("fileServer.html")
 
 
 # 文件下载--不用判断是否登录
@@ -190,80 +200,80 @@ def download(dirname, filename):
 
 
 # 文件详情
-@app.route('/<path:user_id>/<re("fileDetail|fileDate"):url>', methods=["GET"])
-def detail(user_id, url):
-    # 来源地址
-    ip = request.remote_addr
-    # 判断是否有登录会话
-    token = session.get("tempUserId")
-    sql = f"select * from sessiontable where tempUserId='{token}' and userId='{user_id}' and isActive=1;"
-    res = query_func(sql)
-    if res:
-        if url == "fileDate":
-            save_path = os.path.join(BASIC_PATH, user_id)
-            os.mkdir(save_path) if not os.path.exists(save_path) else save_path
-            filenames = os.listdir(save_path)
-            files = [os.path.join(save_path, item) for item in filenames]
-            file_list = []
-            for file in files:
-                file_date = os.path.getmtime(file)
-                file_name = os.path.basename(file)
-                file_size = os.path.getsize(file)
-                file_date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(file_date))
-                if VENV == "local":
-                    file_url = f"http://{HOST}:{PORT}/download/{user_id}/{file_name}"
-                else:
-                    file_url = f"http://{HOST}/download/{user_id}/{file_name}"
-                file_list.append(
-                    {"fileSize": file_size, "fileDate": file_date, "fileName": file_name, "fileUrl": file_url})
-            # 按日期倒序
-            file_list = sorted(file_list, key=lambda item: item["fileDate"], reverse=True)
-            # 转json格式，支持中文
-            file_list = json.dumps(file_list, ensure_ascii=False)
-            # 埋入日志
-            log.info(f"request size {len(file_list)}b by {ip}")
-            return jsonify({"status": True, "message": file_list})
-        # 埋入日志
-        log.info(f"request detail page by {ip}")
-        return render_template("fileDetail.html")
-    else:
-        if url == "fileDate":
-            # 埋入日志
-            log.warning(f"request size 0b by {ip}")
-        # 埋入日志
-        log.info(f"request detail page failed by {ip}")
-        return jsonify({"status": False, "message": "no login"})
+# @app.route('/<path:user_id>/<re("fileDetail|fileDate"):url>', methods=["GET"])
+# def detail(user_id, url):
+#     # 来源地址
+#     ip = request.remote_addr
+#     # 判断是否有登录会话
+#     token = session.get("tempUserId")
+#     sql = f"select * from sessiontable where tempUserId='{token}' and userId='{user_id}' and isActive=1;"
+#     res = query_func(sql)
+#     if res:
+#         if url == "fileDate":
+#             save_path = os.path.join(BASIC_PATH, user_id)
+#             os.mkdir(save_path) if not os.path.exists(save_path) else save_path
+#             filenames = os.listdir(save_path)
+#             files = [os.path.join(save_path, item) for item in filenames]
+#             file_list = []
+#             for file in files:
+#                 file_date = os.path.getmtime(file)
+#                 file_name = os.path.basename(file)
+#                 file_size = os.path.getsize(file)
+#                 file_date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(file_date))
+#                 if VENV == "local":
+#                     file_url = f"http://{HOST}:{PORT}/download/{user_id}/{file_name}"
+#                 else:
+#                     file_url = f"http://{HOST}/download/{user_id}/{file_name}"
+#                 file_list.append(
+#                     {"fileSize": file_size, "fileDate": file_date, "fileName": file_name, "fileUrl": file_url})
+#             # 按日期倒序
+#             file_list = sorted(file_list, key=lambda item: item["fileDate"], reverse=True)
+#             # 转json格式，支持中文
+#             file_list = json.dumps(file_list, ensure_ascii=False)
+#             # 埋入日志
+#             log.info(f"request size {len(file_list)}b by {ip}")
+#             return jsonify({"status": True, "message": file_list})
+#         # 埋入日志
+#         log.info(f"request detail page by {ip}")
+#         return render_template("fileDetail.html")
+#     else:
+#         if url == "fileDate":
+#             # 埋入日志
+#             log.warning(f"request size 0b by {ip}")
+#         # 埋入日志
+#         log.info(f"request detail page failed by {ip}")
+#         return jsonify({"status": False, "message": "no login"})
 
 
 # 文件删除接口
-@app.route('/<path:user_id>/fileDel/<path:filename>', methods=["DELETE"])
-def delete(user_id, filename):
-    # 来源地址
-    ip = request.remote_addr
-    # 判断是否有登录会话
-    token = session.get("tempUserId")
-    sql = f"select * from sessiontable where tempUserId='{token}' and userId='{user_id}' and isActive=1;"
-    res = query_func(sql)
-    if res:
-        save_path = os.path.join(BASIC_PATH, user_id)
-        os.mkdir(save_path) if not os.path.exists(save_path) else save_path
-        filenames = os.listdir(save_path)
-        try:
-            if filename in filenames:
-                os.remove(os.path.join(save_path, filename))
-                # 埋入日志
-                log.warning(f"{user_id} delete file {filename} by {ip}")
-                return jsonify({"status": True, "message": "delete success"})
-            # 埋入日志
-            log.warning(f"{user_id} delete filename {filename} by {ip} is failed")
-            return jsonify({"status": False, "message": f"the filename is not exists"})
-        except Exception as e:
-            log.error(f"{user_id} delete filename {filename} by {ip} is error")
-            return jsonify({"status": False, "message": f"the filename delete failed: {e}"})
-    else:
-        # 埋入日志
-        log.info(f"{user_id} delete file {filename} failed by {ip}")
-        return jsonify({"status": False, "message": "no login"})
+# @app.route('/<path:user_id>/fileDel/<path:filename>', methods=["DELETE"])
+# def delete(user_id, filename):
+#     # 来源地址
+#     ip = request.remote_addr
+#     # 判断是否有登录会话
+#     token = session.get("tempUserId")
+#     sql = f"select * from sessiontable where tempUserId='{token}' and userId='{user_id}' and isActive=1;"
+#     res = query_func(sql)
+#     if res:
+#         save_path = os.path.join(BASIC_PATH, user_id)
+#         os.mkdir(save_path) if not os.path.exists(save_path) else save_path
+#         filenames = os.listdir(save_path)
+#         try:
+#             if filename in filenames:
+#                 os.remove(os.path.join(save_path, filename))
+#                 # 埋入日志
+#                 log.warning(f"{user_id} delete file {filename} by {ip}")
+#                 return jsonify({"status": True, "message": "delete success"})
+#             # 埋入日志
+#             log.warning(f"{user_id} delete filename {filename} by {ip} is failed")
+#             return jsonify({"status": False, "message": f"the filename is not exists"})
+#         except Exception as e:
+#             log.error(f"{user_id} delete filename {filename} by {ip} is error")
+#             return jsonify({"status": False, "message": f"the filename delete failed: {e}"})
+#     else:
+#         # 埋入日志
+#         log.info(f"{user_id} delete file {filename} failed by {ip}")
+#         return jsonify({"status": False, "message": "no login"})
 
 
 # 404.html

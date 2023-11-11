@@ -151,36 +151,37 @@ def callback():
 
 
 # 文件上传，返回：{"status": True, "fileUrl": ""}
-# @app.route('/<re("index|fileUpload"):url>', methods=["GET", "POST"])
-# def upload(url):
-#     # 来源地址
-#     ip = request.remote_addr
-#     if request.method == "POST":
-#         # 判断是否有登录会话
-#         token = session.get("tempUserId")
-#         f = request.files["file"]
-#         sql = f"select * from sessiontable where tempUserId='{token}' and isActive=1;"
-#         if not token or not query_func(sql):
-#             # 未登录，文件放在common文件夹下
-#             save_path = os.path.join(BASIC_PATH, "common")
-#             file_url = f"http://{HOST}:{PORT}/download/common/{f.filename}" if VENV == "local" else \
-#                 f"http://{HOST}/download/common/{f.filename}"
-#         else:
-#             # 已登录，文件放在userId文件夹下
-#             res = query_func(sql)
-#             user_id = res["userId"]
-#             save_path = os.path.join(BASIC_PATH, user_id)
-#             file_url = f"http://{HOST}:{PORT}/download/{user_id}/{f.filename}" if VENV == "local" else \
-#                 f"http://{HOST}/download/{user_id}/{f.filename}"
-#         os.mkdir(save_path) if not os.path.exists(save_path) else save_path
-#         upload_path = os.path.join(save_path, f.filename)
-#         f.save(upload_path)
-#         # 埋入日志
-#         log.info(f"upload file_url {file_url} by {ip}")
-#         return jsonify({"status": True, "message": file_url})
-#     # 埋入日志
-#     log.info(f"request index page by {ip}")
-#     return render_template("fileServer.html")
+@app.route('/<re("index|fileUpload"):url>', methods=["GET", "POST"])
+def upload(url):
+    # 来源地址
+    ip = request.remote_addr
+    if request.method == "POST":
+        pass
+        # 判断是否有登录会话
+        # token = session.get("tempUserId")
+        # f = request.files["file"]
+        # sql = f"select * from sessiontable where tempUserId='{token}' and isActive=1;"
+        # if not token or not query_func(sql):
+        #     # 未登录，文件放在common文件夹下
+        #     save_path = os.path.join(BASIC_PATH, "common")
+        #     file_url = f"http://{HOST}:{PORT}/download/common/{f.filename}" if VENV == "local" else \
+        #         f"http://{HOST}/download/common/{f.filename}"
+        # else:
+        #     # 已登录，文件放在userId文件夹下
+        #     res = query_func(sql)
+        #     user_id = res["userId"]
+        #     save_path = os.path.join(BASIC_PATH, user_id)
+        #     file_url = f"http://{HOST}:{PORT}/download/{user_id}/{f.filename}" if VENV == "local" else \
+        #         f"http://{HOST}/download/{user_id}/{f.filename}"
+        # os.mkdir(save_path) if not os.path.exists(save_path) else save_path
+        # upload_path = os.path.join(save_path, f.filename)
+        # f.save(upload_path)
+        # # 埋入日志
+        # log.info(f"upload file_url {file_url} by {ip}")
+        # return jsonify({"status": True, "message": file_url})
+    # 埋入日志
+    log.info(f"request index page by {ip}")
+    return render_template("fileServer.html")
 
 
 # 文件下载--不用判断是否登录

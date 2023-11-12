@@ -51,7 +51,7 @@ def mine_decrypt(string):
 def generate_jwt_token(payload, exp=3600 * 24):
     key = jwt_secret_key
     now = time.time()
-    payload = payload.update({"exp": now + exp})
+    payload.update({"exp": now + exp})
     return jwt.encode(payload, key, algorithm=jwt_algorithm)
 
 

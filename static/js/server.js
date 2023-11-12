@@ -177,7 +177,7 @@ const isLoginHandle = () => {
             // ajax请求
             $.ajax({
                 url: "/mashang/user/login",
-                type: "get",
+                type: "post",
                 headers: {
                     "authorization": localStorage.getItem("jwtToken")
                 },

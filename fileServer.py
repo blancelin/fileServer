@@ -98,7 +98,7 @@ def get_token():
     if not temp_user_id or temp_user_id not in session_dict:
         return jsonify({"status": False, "message": "please scan weixin QRcode", "jwt_token": ""})
     jwt_token = session_dict[temp_user_id]
-    log.info(f"get jwt token success, {temp_user_id}")
+    log.info(f"get jwt token success {temp_user_id}")
     return jsonify({"status": True, "jwt_token": jwt_token, "message": "success"})
 
 

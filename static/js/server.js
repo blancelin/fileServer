@@ -199,7 +199,7 @@ function showQRcode() {
 const isLoginHandle = () => {
     if (userId) {
         // 携带jwtToken跳转
-        window.location.href = `/${userId}/fileDetail?jwtToken=${localStorage.get(jwtToken)}`;
+        window.location.href = `/${userId}/fileDetail?jwtToken=${localStorage.getItem("jwtToken")}`;
     } else {
         // 展示wx登录界面
         $("#loginWrap").css("display", "block");
@@ -227,6 +227,7 @@ const isLoginHandle = () => {
                                 // 获取payload
                                 let payload = resp.payload;
                                 let avatar = payload.avatar;
+                                userId = payload.user_id;
                                 nickname = payload.nick_name;
                                 // 关闭扫码登录界面
                                 $("#loginWrap").css("display", "none");

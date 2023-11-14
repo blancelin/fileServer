@@ -27,6 +27,8 @@
             success: function (resp) {
                 if (resp.status) {
                     fileList = resp.file_list;
+                } else {
+                    location.href = "/index";
                 }
             }
         })

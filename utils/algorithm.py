@@ -55,6 +55,13 @@ def generate_jwt_token(payload, exp=3600 * 24):
     return jwt.encode(payload, key, algorithm=jwt_algorithm)
 
 
+def remove_key_by_value(value, dic):
+    for k, v in dic.items():
+        if v == value:
+            del dic[k]
+            return
+
+
 if __name__ == '__main__':
     print("加密：{0}".format(mine_encrypt("hello world")))
     print("解密：{0}".format(mine_decrypt(mine_encrypt("hello world"))))

@@ -13,11 +13,21 @@
         var fileArray;
         // 取消异步
         $.ajaxSetup({
-            async : false
+            async: false
         });
         // 数据获取
-        $.get(`/${localStorage.getItem("userId")}/fileDate`, function (result) {
-            fileList = JSON.parse(result.message);
+        $.get({
+            url: `/${localStorage.getItem("userId")}/fileDate`,
+            headers: {
+                "authorization": localStorage.getItem("jwtToken")
+            },
+            success: function (resp) {
+                if (resp.status) {
+                    console.log(resp.status)
+                    console.log(resp.status === "true");
+                    fileList = JSON.parse(resp.file_url);
+                }
+            }
         })
         // 总长度
         var listCount = fileList.length
@@ -57,7 +67,7 @@
                 var lx = parseInt(0.24 * width - textWidth);
                 // 最右目标起始位置
                 var rx = parseInt(width * 0.0035);
-                if (x < lx && tag == 0)  {
+                if (x < lx && tag == 0) {
                     // 向左移动
                     x++;
                     if (x == lx) {
@@ -86,15 +96,18 @@
                 // 调文件删除接口
                 $.ajax({
                     url: `/${localStorage.getItem("userId")}/fileDel/${fileName}`,
+                    headers: {
+                        "authorization": localStorage.getItem("jwtToken")
+                    },
                     type: "DELETE",
-                    success:function (result) {
+                    success: function (result) {
                         // 请求成功后的回调函数
                         if (result.message.indexOf("success") >= 0) {
                             // 删除成功,移除页面元素
                             document.evaluate(`//div[@id="content"][.//a[text()="${fileName}"]]`, document).iterateNext().remove();
                             // 从fileList中移除数据
                             let index;
-                            for (let i=0; i<fileList.length; i++) {
+                            for (let i = 0; i < fileList.length; i++) {
                                 if (fileList[i].fileName == fileName) {
                                     index = i;
                                     break;
@@ -107,7 +120,7 @@
                             if (document.querySelectorAll(".pageItemActiveSearch").length > 0) {
                                 // 从fileArray中移除数据
                                 let idx;
-                                for (let i=0; i<fileArray.length; i++) {
+                                for (let i = 0; i < fileArray.length; i++) {
                                     if (fileArray[i].fileName == fileName) {
                                         idx = i;
                                         break;
@@ -140,16 +153,16 @@
                                 // 搜索展示
                                 $("#page").initPage(listCount, currentPage, fileList, "Full", data.fileDetailDisplay);
                                 // 展示分页栏
-                                $(".zzsc").css("display", "flex"); 
+                                $(".zzsc").css("display", "flex");
                             }
                         } else {
-                            window.alert("暂时没有删除权限"); 
+                            window.alert("暂时没有删除权限");
                         }
                     }
                 })
             }
         }
-        window.onload = function() {
+        window.onload = function () {
             wordMove();
         };
     </script>

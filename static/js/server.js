@@ -225,7 +225,7 @@ const isLoginHandle = () => {
                             // 登录后的处理
                             if (resp.status) {
                                 // 获取payload
-                                let payload = JSON.parse(resp.payload);
+                                let payload = resp.payload;
                                 let avatar = payload.avatar;
                                 nickname = payload.nick_name;
                                 // 关闭扫码登录界面

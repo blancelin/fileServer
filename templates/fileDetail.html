@@ -17,7 +17,7 @@
         });
         // 数据获取
         $.get({
-            url: `/${localStorage.getItem("userId")}/fileDate`,
+            url: `/${userId}/fileData`,
             headers: {
                 "authorization": localStorage.getItem("jwtToken")
             },
@@ -95,7 +95,7 @@
             if (confirm) {
                 // 调文件删除接口
                 $.ajax({
-                    url: `/${localStorage.getItem("userId")}/fileDel/${fileName}`,
+                    url: `/${userId}/fileDel/${fileName}`,
                     headers: {
                         "authorization": localStorage.getItem("jwtToken")
                     },

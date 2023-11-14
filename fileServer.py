@@ -97,7 +97,7 @@ def get_token():
     temp_user_id = request.args.get("tempUserId", None)
     if not temp_user_id or temp_user_id not in session_dict:
         return jsonify({"status": False, "message": "please scan weixin QRcode", "jwt_token": ""})
-    jwt_token = session_dict["temp_user_id"]
+    jwt_token = session_dict[temp_user_id]
     log.info(f"get jwt token success, {temp_user_id}")
     return jsonify({"status": True, "jwt_token": jwt_token, "message": "success"})
 
@@ -119,8 +119,6 @@ def get_jwt_token_and_payload():
 def login_check(func):
     def wrapper(*args, **kwargs):
         jwt_token, payload = get_jwt_token_and_payload()
-        # 回写request
-        request.payload = payload
         # 是否退出登录
         if "logout" in request.url:
             # 维护session_dict
@@ -136,7 +134,8 @@ def login_check(func):
 @app.route("/mashang/user/userinfo", methods=["GET"])
 def userinfo():
     # 获取payload
-    payload = request.payload
+    jwt_token = request.headers.get("authorization")
+    payload = jwt.decode(jwt_token, jwt_secret_key, algorithms=jwt_algorithm)
     nick_name = payload["nick_name"]
     # 设置响应
     log.info(f"Guest {nick_name}, is login")
@@ -151,7 +150,8 @@ def logout():
         退出登录
     """
     # 获取payload
-    payload = request.payload
+    jwt_token = request.headers.get("authorization")
+    payload = jwt.decode(jwt_token, jwt_secret_key, algorithms=jwt_algorithm)
     nick_name = payload["nick_name"]
     log.info(f"Guest {nick_name}, loginOut success")
     return jsonify({"status": True, "message": "logout success"})
@@ -191,7 +191,7 @@ def upload(url):
 
 
 # 文件下载--不用判断是否登录
-@app.route("/download/<path:dirname>/<path:filename>", method=["GET"])
+@app.route("/download/<path:dirname>/<path:filename>", methods=["GET"])
 def download(dirname, filename):
     # 来源地址
     ip = request.remote_addr
@@ -231,9 +231,15 @@ def detail(user_id):
 # 文件详情信息
 @login_check
 @app.route('/<path:user_id>/fileData', methods=["GET"])
-def detail(user_id):
+def data(user_id):
     # 来源地址
     ip = request.remote_addr
+    # 获取payload
+    jwt_token = request.headers.get("authorization")
+    payload = jwt.decode(jwt_token, jwt_secret_key, algorithms=jwt_algorithm)
+    payload_user_id = payload["user_id"]
+    if user_id != payload_user_id:
+        return jsonify({"status": False, "message": "the user_id is illegality"})
     save_path = os.path.join(BASIC_PATH, user_id)
     os.mkdir(save_path) if not os.path.exists(save_path) else save_path
     filenames = os.listdir(save_path)
@@ -265,6 +271,12 @@ def detail(user_id):
 def delete(user_id, filename):
     # 来源地址
     ip = request.remote_addr
+    # 获取payload
+    jwt_token = request.headers.get("authorization")
+    payload = jwt.decode(jwt_token, jwt_secret_key, algorithms=jwt_algorithm)
+    payload_user_id = payload["user_id"]
+    if user_id != payload_user_id:
+        return jsonify({"status": False, "message": "the user_id is illegality"})
     save_path = os.path.join(BASIC_PATH, user_id)
     os.mkdir(save_path) if not os.path.exists(save_path) else save_path
     filenames = os.listdir(save_path)

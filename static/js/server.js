@@ -1,5 +1,6 @@
 var t;
 var userId;
+var nickname;
 // 激活选择文件
 const uploadFunc = () => {
     document.querySelector("#file").click();
@@ -146,12 +147,10 @@ const isLoginCheck = () => {
             success: function(resp) {
                 // 登录后的处理
                 if (resp.status) {
-                    console.log(typeof resp.status);
                     // 获取payload
-                    let payload = JSON.parse(resp.payload);
-                    console.log(payload);
-                    let nickname = payload.nick_name;
+                    let payload = resp.payload;
                     let avatar = payload.avatar;
+                    nickname = payload.nick_name;
                     userId = payload.user_id;
                     // 隐藏原有图标
                     $(".logo-box").hide();
@@ -164,12 +163,18 @@ const isLoginCheck = () => {
                 } else {
                     // 二维码展示
                     showQRcode();
+                    // 展示初始动态图像
+                    let pictureElement = $('<picture class="logo-box"><img src="../static/icon.gif" alt="" draggable="false"></picture>');
+                    $("#user").before(pictureElement);
                 }
             }
         })
     } else {
         // 二维码展示
         showQRcode();
+        // 展示初始动态图像
+        let pictureElement = $('<picture class="logo-box"><img src="../static/icon.gif" alt="" draggable="false"></picture>');
+        $("#user").before(pictureElement);
     }
 }
 // 二维码展示
@@ -221,8 +226,8 @@ const isLoginHandle = () => {
                             if (resp.status) {
                                 // 获取payload
                                 let payload = JSON.parse(resp.payload);
-                                let nickname = payload.nick_name;
                                 let avatar = payload.avatar;
+                                nickname = payload.nick_name;
                                 // 关闭扫码登录界面
                                 $("#loginWrap").css("display", "none");
                                 // 隐藏原有图标
@@ -285,7 +290,7 @@ window.onload = function () {
     });
     $(".user .userName").mouseout(function () {
         $(".userName").css("color", "#4191f5");
-        $("#nickName").html("欢迎你，" + localStorage.getItem("nickname"));
+        $("#nickName").html("欢迎你，" + nickname);
     });
     // 监听点击退出登录
     $(".user .userName").on("click", function () {

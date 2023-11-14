@@ -30,7 +30,7 @@
                     console.log(resp.status === "true");
                     console.log(typeof resp.file_list);
                     console.log(resp.file_list);
-                    fileList = JSON.parse(resp.file_list);
+                    fileList = resp.file_list;
                 }
             }
         })

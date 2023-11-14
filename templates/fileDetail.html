@@ -26,10 +26,6 @@
             },
             success: function (resp) {
                 if (resp.status) {
-                    console.log(resp.status)
-                    console.log(resp.status === "true");
-                    console.log(typeof resp.file_list);
-                    console.log(resp.file_list);
                     fileList = resp.file_list;
                 }
             }

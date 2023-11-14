@@ -258,8 +258,6 @@ def data(user_id):
             {"fileSize": file_size, "fileDate": file_date, "fileName": file_name, "fileUrl": file_url})
     # 按日期倒序
     file_list = sorted(file_list, key=lambda item: item["fileDate"], reverse=True)
-    # 转json格式，支持中文
-    # file_list = json.dumps(file_list, ensure_ascii=False)
     # 埋入日志
     log.info(f"request size {len(file_list)}b by {ip}")
     return jsonify({"status": True, "file_list": file_list, "message": "success"})

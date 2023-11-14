@@ -18,8 +18,9 @@
             async: false
         });
         // 数据获取
-        $.get({
+        $.ajax({
             url: `/${userId}/fileData`,
+            type: "get",
             headers: {
                 "authorization": localStorage.getItem("jwtToken")
             },
@@ -27,6 +28,7 @@
                 if (resp.status) {
                     console.log(resp.status)
                     console.log(resp.status === "true");
+                    console.log(resp.file_url);
                     fileList = JSON.parse(resp.file_url);
                 }
             }
@@ -101,7 +103,7 @@
                     headers: {
                         "authorization": localStorage.getItem("jwtToken")
                     },
-                    type: "DELETE",
+                    type: "delete",
                     success: function (result) {
                         // 请求成功后的回调函数
                         if (result.message.indexOf("success") >= 0) {

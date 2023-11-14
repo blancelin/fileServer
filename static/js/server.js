@@ -112,7 +112,7 @@ const fileHandle = (file) => {
         // 是否存在jwtToken
         if (localStorage.getItem("jwtToken")) {
             let jwtToken = localStorage.getItem("jwtToken");
-            xhr.setRequestHeader("jwtToken", jwtToken);
+            xhr.setRequestHeader("authorization", jwtToken);
         }
         // 发送请求
         xhr.send(formData);
@@ -260,6 +260,8 @@ function logout() {
             if (resp.status) {
                 // 清除浏览器存储
                 localStorage.clear();
+                // 刷新当前页
+                window.location.reload();
             }
         }
     })
@@ -297,7 +299,5 @@ window.onload = function () {
     $(".user .userName").on("click", function () {
         // 退出登录
         logout();
-        // 刷新当前页
-        window.location.reload();
     });
 }

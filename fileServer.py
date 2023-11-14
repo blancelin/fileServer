@@ -138,7 +138,7 @@ def userinfo():
     payload = jwt.decode(jwt_token, jwt_secret_key, algorithms=jwt_algorithm)
     nick_name = payload["nick_name"]
     # 设置响应
-    log.info(f"Guest {nick_name}, is login")
+    log.info(f"Guest {nick_name} is login")
     return jsonify({"status": True, "payload": payload, "message": "success"})
 
 
@@ -153,7 +153,7 @@ def logout():
     jwt_token = request.headers.get("authorization")
     payload = jwt.decode(jwt_token, jwt_secret_key, algorithms=jwt_algorithm)
     nick_name = payload["nick_name"]
-    log.info(f"Guest {nick_name}, loginOut success")
+    log.info(f"Guest {nick_name} logout success")
     return jsonify({"status": True, "message": "logout success"})
 
 
@@ -262,7 +262,7 @@ def data(user_id):
     file_list = json.dumps(file_list, ensure_ascii=False)
     # 埋入日志
     log.info(f"request size {len(file_list)}b by {ip}")
-    return jsonify({"status": True, "message": file_list})
+    return jsonify({"status": True, "file_list": file_list, "message": "success"})
 
 
 # 文件删除接口

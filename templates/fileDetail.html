@@ -11,6 +11,7 @@
     <script type="text/javascript">
         var fileList;
         var fileArray;
+        var userId = location.pathname.replace("fileDetail", "").replaceAll("/", "");
         // 取消异步
         $.ajaxSetup({
             async: false

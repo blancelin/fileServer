@@ -5,6 +5,7 @@ import time
 import socket
 import requests
 
+from functools import wraps
 from threading import Timer
 from urllib import request as rq
 from jwt import ExpiredSignatureError
@@ -35,7 +36,7 @@ app.config['SECRET_KEY'] = "blance"
 # 存储用户信息字典
 session_dict = {}
 # 当前环境
-VENV = "prod"  # TODO 环境切换时：local or prod
+VENV = "local"  # TODO 环境切换时：local or prod
 if VENV == "local":
     # 局域网ip
     HOST = socket.gethostbyname(socket.gethostname())
@@ -103,6 +104,8 @@ def get_token():
 
 
 def login_check(func):
+    # 避免重名函数
+    @wraps(func)
     def wrapper(*args, **kwargs):
         jwt_token = request.headers.get("authorization")
         try:
@@ -225,8 +228,8 @@ def detail(user_id):
 
 
 # 文件详情信息
-@login_check
 @app.route('/<path:user_id>/fileData', methods=["GET"])
+@login_check
 def data(user_id):
     # 来源地址
     ip = request.remote_addr
@@ -260,8 +263,8 @@ def data(user_id):
 
 
 # 文件删除接口
-@login_check
 @app.route('/<path:user_id>/fileDel/<path:filename>', methods=["DELETE"])
+@login_check
 def delete(user_id, filename):
     # 来源地址
     ip = request.remote_addr

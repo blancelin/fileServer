@@ -225,8 +225,8 @@ def detail(user_id):
 
 
 # 文件详情信息
-@app.route('/<path:user_id>/fileData', methods=["GET"])
 @login_check
+@app.route('/<path:user_id>/fileData', methods=["GET"])
 def data(user_id):
     # 来源地址
     ip = request.remote_addr
@@ -260,8 +260,8 @@ def data(user_id):
 
 
 # 文件删除接口
-@app.route('/<path:user_id>/fileDel/<path:filename>', methods=["DELETE"])
 @login_check
+@app.route('/<path:user_id>/fileDel/<path:filename>', methods=["DELETE"])
 def delete(user_id, filename):
     # 来源地址
     ip = request.remote_addr

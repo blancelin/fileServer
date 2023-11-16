@@ -36,7 +36,7 @@ app.config['SECRET_KEY'] = "blance"
 # 存储用户信息字典
 session_dict = {}
 # 当前环境
-VENV = "local"  # TODO 环境切换时：local or prod
+VENV = "prod"  # TODO 环境切换时：local or prod
 if VENV == "local":
     # 局域网ip
     HOST = socket.gethostbyname(socket.gethostname())

@@ -232,7 +232,15 @@ def data(user_id):
     ip = request.remote_addr
     # 获取payload
     jwt_token = request.headers.get("authorization")
-    payload = jwt.decode(jwt_token, jwt_secret_key, algorithms=jwt_algorithm)
+    try:
+        payload = jwt.decode(jwt_token, jwt_secret_key, algorithms=jwt_algorithm)
+    except ExpiredSignatureError:
+        # 维护session_dict
+        remove_key_by_value(jwt_token, session_dict)
+        return jsonify({"status": False, "message": "the jwtToken has expired"})
+    except Exception as e:
+        print(e)
+        return jsonify({"status": False, "message": "the jwtToken is illegality"})
     payload_user_id = payload["user_id"]
     if user_id != payload_user_id:
         return jsonify({"status": False, "message": "the user_id is illegality"})

@@ -225,22 +225,14 @@ def detail(user_id):
 
 
 # 文件详情信息
-@login_check
 @app.route('/<path:user_id>/fileData', methods=["GET"])
+@login_check
 def data(user_id):
     # 来源地址
     ip = request.remote_addr
     # 获取payload
     jwt_token = request.headers.get("authorization")
-    try:
-        payload = jwt.decode(jwt_token, jwt_secret_key, algorithms=jwt_algorithm)
-    except ExpiredSignatureError:
-        # 维护session_dict
-        remove_key_by_value(jwt_token, session_dict)
-        return jsonify({"status": False, "message": "the jwtToken has expired"})
-    except Exception as e:
-        print(e)
-        return jsonify({"status": False, "message": "the jwtToken is illegality"})
+    payload = jwt.decode(jwt_token, jwt_secret_key, algorithms=jwt_algorithm)
     payload_user_id = payload["user_id"]
     if user_id != payload_user_id:
         return jsonify({"status": False, "message": "the user_id is illegality"})
@@ -268,8 +260,8 @@ def data(user_id):
 
 
 # 文件删除接口
-@login_check
 @app.route('/<path:user_id>/fileDel/<path:filename>', methods=["DELETE"])
+@login_check
 def delete(user_id, filename):
     # 来源地址
     ip = request.remote_addr

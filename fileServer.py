@@ -102,23 +102,18 @@ def get_token():
     return jsonify({"status": True, "jwt_token": jwt_token, "message": "success"})
 
 
-def get_jwt_token_and_payload():
-    jwt_token = request.headers.get("authorization")
-    try:
-        payload = jwt.decode(jwt_token, jwt_secret_key, algorithms=jwt_algorithm)
-    except ExpiredSignatureError:
-        # 维护session_dict
-        remove_key_by_value(jwt_token, session_dict)
-        return jsonify({"status": False, "message": "the jwtToken has expired"})
-    except Exception as e:
-        print(e)
-        return jsonify({"status": False, "message": "the jwtToken is illegality"})
-    return jwt_token, payload
-
-
 def login_check(func):
     def wrapper(*args, **kwargs):
-        jwt_token, payload = get_jwt_token_and_payload()
+        jwt_token = request.headers.get("authorization")
+        try:
+            jwt.decode(jwt_token, jwt_secret_key, algorithms=jwt_algorithm)
+        except ExpiredSignatureError:
+            # 维护session_dict
+            remove_key_by_value(jwt_token, session_dict)
+            return jsonify({"status": False, "message": "the jwtToken has expired"})
+        except Exception as e:
+            print(e)
+            return jsonify({"status": False, "message": "the jwtToken is illegality"})
         # 是否退出登录
         if "logout" in request.url:
             # 维护session_dict
@@ -165,9 +160,10 @@ def upload(url):
     if request.method == "POST":
         # 判断是否登录
         try:
-            _, payload = get_jwt_token_and_payload()
-            f = request.files["file"]
+            jwt_token = request.headers.get("authorization")
+            payload = jwt.decode(jwt_token, jwt_secret_key, algorithms=jwt_algorithm)
             # 已登录，文件放在userId文件夹下
+            f = request.files["file"]
             user_id = payload["user_id"]
             save_path = os.path.join(BASIC_PATH, user_id)
             file_url = f"http://{HOST}:{PORT}/download/{user_id}/{f.filename}" if VENV == "local" else \

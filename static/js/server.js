@@ -195,7 +195,7 @@ function showQRcode() {
         })
     })
 }
-// 登录处理（点击时触发）
+// 文件下载
 const isLoginHandle = () => {
     if (userId) {
         // 携带jwtToken跳转
